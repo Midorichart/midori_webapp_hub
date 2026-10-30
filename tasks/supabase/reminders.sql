@@ -23,6 +23,12 @@ alter table discord_recipients enable row level security;
 insert into discord_recipients (user_id)
   select id from auth.users where email = '[여기에 이메일]'
   on conflict do nothing;
+do $$
+begin
+  if not exists (select 1 from discord_recipients) then
+    raise exception '알림 받을 계정이 없어요. 위의 [여기에 이메일] 을 웹에 로그인하는 이메일로 바꾼 뒤 다시 실행해 주세요.';
+  end if;
+end $$;
 
 -- 보낸 알림 기록 (같은 알림을 두 번 보내지 않게)
 create table if not exists reminder_log (
