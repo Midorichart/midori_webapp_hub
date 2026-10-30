@@ -152,6 +152,10 @@
   .rform input[type=text] { flex: 1; min-width: 80px; }
   .rform button { height: 34px; padding: 0 12px; border-radius: 8px; border: 0; background: var(--ink); color: var(--page); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
   .rform button:hover { opacity: .88; }
+  .rform .rr { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); cursor: pointer; margin-right: auto; }
+  .rform select { height: 34px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--page); color: var(--ink); padding: 0 6px; font: inherit; font-size: 13px; }
+  .rform select:disabled, .sel:disabled { opacity: .4; }
+  .bell { font-size: 11px; font-weight: 600; color: var(--accent); white-space: nowrap; margin-left: 6px; }
   .tools { display: flex; gap: 4px; justify-content: flex-end; margin-top: 14px; }
   .tools button { height: 32px; padding: 0 10px; font-size: 13px; font-weight: 600; background: none; border: 0; border-radius: 8px; color: var(--ink-2); cursor: pointer; }
   .tools button:hover { background: var(--surface-2); color: var(--ink); }
@@ -214,6 +218,9 @@
   .frow input[type=text], .frow input[type=email], .frow input[type=password], .frow input[type=time] { flex: 1; }
   .frow .tilde { color: var(--mute); }
   .frow label { font-size: 14px; display: flex; align-items: center; gap: 8px; color: var(--ink-2); cursor: pointer; }
+  .sel { height: 42px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--page); color: var(--ink); padding: 0 10px; font: inherit; font-size: 14px; }
+  .sel:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+  .frow .hint { margin-left: auto; font-size: 12px; color: var(--mute); }
   .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; align-items: center; }
   .actions button { height: 38px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); cursor: pointer; font-size: 14px; font-weight: 600; }
   .actions button:hover { background: var(--surface-2); }
@@ -282,6 +289,11 @@
     <form id="blkForm">
       <div class="frow"><input type="text" id="blkText" placeholder="할 일" required></div>
       <div class="frow"><input type="time" id="blkStart" required><span class="tilde">–</span><input type="time" id="blkEnd" required></div>
+      <div class="frow">
+        <label><input type="checkbox" class="chk" id="blkRemind"> 알림</label>
+        <select class="sel" id="blkRemindMin" aria-label="알림 시점"></select>
+        <span class="hint">디스코드 · 바탕화면 위젯</span>
+      </div>
       <div class="frow" id="blkDoneRow"><label><input type="checkbox" class="chk" id="blkDone"> 이 날 완료</label></div>
       <div class="actions">
         <button type="button" class="danger" id="blkDelete">삭제</button>
@@ -343,6 +355,15 @@
   const minToHM = m => `${pad(Math.floor(m/60))}:${pad(m%60)}`;
   const hmToMin = s => { const [h, m] = s.split(':').map(Number); return h*60 + (m||0); };
   const TODAY = ymd(new Date());
+
+  // 알림 (루틴·시간표 블록): 시작 몇 분 전에 디스코드 + 바탕화면 위젯으로
+  const REMIND_MINS = [0, 5, 10, 15, 30, 60];
+  const remindLabel = m => m === 0 ? '시작할 때' : m % 60 === 0 ? `${m / 60}시간 전` : `${m}분 전`;
+  const remindOptions = sel => [...new Set([...REMIND_MINS, sel])].sort((a, b) => a - b)
+    .map(m => `<option value="${m}" ${m === sel ? 'selected' : ''}>${remindLabel(m)}</option>`).join('');
+  const bell = r => r.remind ? `<span class="bell">🔔 ${remindLabel(r.remind_min ?? 10)}</span>` : '';
+  // DB 에 알림 칸이 아직 없을 수도 있어(reminders.sql 실행 전), 켰거나 원래 칸이 있는 행만 같이 저장
+  const remindPatch = (src, remind, remind_min) => (remind || (src && 'remind' in src)) ? { remind, remind_min } : {};
 
   const state = { events: [], routines: [], blocks: [], done: {}, ideas: [], daily_notes: [] };
 
@@ -520,7 +541,7 @@
       for (const b of blocksFor(ds)) {
         const top = b.start_min/60*H, height = Math.max((b.end_min-b.start_min)/60*H - 2, 16);
         html += `<div class="blk ${b.kind} ${b.done?'done':''}" style="top:${top+1}px;height:${height}px" data-kind="${b.kind}" data-id="${b.id}" data-date="${ds}">
-          <div class="bt">${esc(b.title)}</div><div class="bs">${minToHM(b.start_min)}–${minToHM(b.end_min)}</div></div>`;
+          <div class="bt">${b.remind ? '🔔 ' : ''}${esc(b.title)}</div><div class="bs">${minToHM(b.start_min)}–${minToHM(b.end_min)}</div></div>`;
       }
       if (ds === TODAY) html += `<div class="nowline" style="top:${(now.getHours()*60+now.getMinutes())/60*H}px"></div>`;
       html += '</div>';
@@ -547,28 +568,38 @@
       $('#blkText').value = src.title; $('#blkStart').value = minToHM(src.start_min); $('#blkEnd').value = minToHM(src.end_min);
       $('#blkDone').checked = kind === 'r' ? !!state.done[ds+'|'+id] : !!src.done;
       $('#blkDoneRow').style.display = hideDone ? 'none' : ''; $('#blkDelete').style.display = '';
+      setRemindFields(!!src.remind, src.remind_min ?? 10);
     } else {
       $('#blkTitle').innerHTML = `${label}<small>${DOW[d.getDay()]}요일 · 새 블록</small>`;
       $('#blkText').value = ''; $('#blkStart').value = minToHM(startMin); $('#blkEnd').value = minToHM(Math.min(startMin+60, 1439));
       $('#blkDone').checked = false;
       $('#blkDoneRow').style.display = 'none'; $('#blkDelete').style.display = 'none';
+      setRemindFields(false, 10);
     }
     $('#blkOverlay').classList.add('show');
     setTimeout(() => $('#blkText').focus(), 50);
   }
+  function setRemindFields(on, min) {
+    $('#blkRemind').checked = on;
+    $('#blkRemindMin').innerHTML = remindOptions(min);
+    $('#blkRemindMin').disabled = !on;
+  }
+  $('#blkRemind').onchange = e => { $('#blkRemindMin').disabled = !e.target.checked; };
+
   $('#blkForm').onsubmit = e => {
     e.preventDefault();
     const title = $('#blkText').value.trim();
     let s = hmToMin($('#blkStart').value), en = hmToMin($('#blkEnd').value);
     if (en === 0) en = 1440;
     if (en <= s) return alert('종료 시간이 시작 시간보다 늦어야 합니다.');
+    const remind = $('#blkRemind').checked, remind_min = Number($('#blkRemindMin').value);
     const { kind, id, date, hideDone } = blkCtx;
     closeAll();
-    if (!id) return addRow('blocks', { date, start_min: s, end_min: en, title, done: false });
+    if (!id) return addRow('blocks', { date, start_min: s, end_min: en, title, done: false, ...remindPatch(null, remind, remind_min) });
     if (kind === 'r') {
-      patchRow('routines', id, { title, start_min: s, end_min: en });
+      patchRow('routines', id, { title, start_min: s, end_min: en, ...remindPatch(state.routines.find(r => r.id === id), remind, remind_min) });
       const want = $('#blkDone').checked; if (!hideDone && want !== !!state.done[date+'|'+id]) setRoutineDone(id, date, want);
-    } else patchRow('blocks', id, { title, start_min: s, end_min: en, done: $('#blkDone').checked });
+    } else patchRow('blocks', id, { title, start_min: s, end_min: en, done: $('#blkDone').checked, ...remindPatch(state.blocks.find(b => b.id === id), remind, remind_min) });
   };
   $('#blkDelete').onclick = () => {
     const { kind, id } = blkCtx;
@@ -608,20 +639,25 @@
       html += `<div class="rday"><h4 class="${dow===0?'sun':''}">${DOW[dow]}요일<small>${DOW_EN[dow]}</small></h4>
         ${rs.length ? rs.map(r => `<div class="item" data-id="${r.id}">
             <span class="tm">${minToHM(r.start_min)}–${minToHM(r.end_min)}</span>
-            <div class="t">${esc(r.title)}</div>
+            <div class="t">${esc(r.title)}${bell(r)}</div>
             <button class="ed" title="수정">✎</button>
             <button class="x" title="삭제">✕</button></div>`).join('') : '<div class="empty">아직 없음</div>'}
-        <form class="rform" data-dow="${dow}"><input type="time" value="09:00" required><input type="time" value="10:00" required><input type="text" placeholder="할 일" required><button type="submit">추가</button></form>
+        <form class="rform" data-dow="${dow}"><input type="time" value="09:00" required><input type="time" value="10:00" required><input type="text" placeholder="할 일" required>
+          <label class="rr"><input type="checkbox" class="chk"> 알림</label><select disabled aria-label="알림 시점">${remindOptions(10)}</select><button type="submit">추가</button></form>
       </div>`;
     }
     html += '</div><div class="tools"><button id="export">백업 내보내기</button><button id="import">가져오기</button></div>';
     main.innerHTML = html;
-    main.querySelectorAll('.rform').forEach(f => f.onsubmit = e => {
-      e.preventDefault();
-      const [st, en, text] = f.querySelectorAll('input');
-      let s = hmToMin(st.value), x = hmToMin(en.value); if (x === 0) x = 1440;
-      if (x <= s) return alert('종료 시간이 시작 시간보다 늦어야 합니다.');
-      addRow('routines', { dow: Number(f.dataset.dow), start_min: s, end_min: x, title: text.value.trim() });
+    main.querySelectorAll('.rform').forEach(f => {
+      const chk = f.querySelector('input[type=checkbox]'), sel = f.querySelector('select');
+      chk.onchange = () => { sel.disabled = !chk.checked; };
+      f.onsubmit = e => {
+        e.preventDefault();
+        const [st, en, text] = f.querySelectorAll('input');
+        let s = hmToMin(st.value), x = hmToMin(en.value); if (x === 0) x = 1440;
+        if (x <= s) return alert('종료 시간이 시작 시간보다 늦어야 합니다.');
+        addRow('routines', { dow: Number(f.dataset.dow), start_min: s, end_min: x, title: text.value.trim(), ...remindPatch(null, chk.checked, Number(sel.value)) });
+      };
     });
     main.querySelectorAll('.rday .x').forEach(b => b.onclick = () => {
       const id = b.closest('.item').dataset.id;

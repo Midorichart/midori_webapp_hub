@@ -7,6 +7,8 @@ midorichart 허브 저장소의 `tasks/` 폴더에 있고, https://midorichart.c
 - `index.html` — 앱 전체 (공통 스타일은 허브의 `assets/site.css`)
 - `config.js` — Supabase URL / anon key 설정
 - `supabase/schema.sql` — Supabase에 만들 테이블
+- `supabase/discord_daily.sql` — 매일 00:00 디스코드 요약
+- `supabase/reminders.sql` — 일정 알림 (시작 N분 전 디스코드)
 
 ## 기능
 | 탭 | 설명 |
@@ -40,6 +42,14 @@ Publishable(anon) 키는 공개되어도 되는 키입니다. 실제 접근 권�
 
 이후 매일 한국 시간 00:00에 그날의 루틴·시간표 블록·달력 일정이 메시지로 옵니다.
 실행 기록은 SQL Editor에서 `select * from cron.job_run_details order by start_time desc limit 10;` 로 볼 수 있습니다.
+
+## 일정 알림 (시작 N분 전)
+루틴을 추가할 때, 또는 시간표 블록을 만들거나 수정할 때 **알림**을 체크하고 시점(시작할 때 / 5·10·15·30분 전 / 1시간 전)을 고르면,
+그때 디스코드로 메시지가 옵니다. 알림이 켜진 항목에는 🔔 표시가 붙습니다. 이미 완료 체크한 항목은 알리지 않습니다.
+
+1. 위의 디스코드 알림(`discord_daily.sql`)을 먼저 설정해 두세요. 같은 웹훅을 씁니다.
+2. `supabase/reminders.sql` 을 열어 `[여기에 이메일]` 을 웹에 로그인하는 이메일로 바꿉니다 (그 계정의 알림만 보냄)
+3. 파일 전체를 **SQL Editor**에 붙여넣고 Run. 이후 1분마다 확인해서 보냅니다.
 
 ## 배포 (무료)
 허브 저장소(`midori_webapp_hub`)를 push 하면 GitHub Pages 로 함께 배포됩니다. 별도 저장소는 필요 없습니다.
