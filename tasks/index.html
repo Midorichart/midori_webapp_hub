@@ -370,9 +370,17 @@
   };
 
   let sb = null;
+  // 탭을 오래 열어 두거나 PC 가 절전에서 깨어나면 만료된 로그인 토큰(JWT)으로 요청이 나갈 수 있음.
+  // 요청 전에 세션을 확인하고(만료됐으면 여기서 갱신), 그래도 JWT 오류면 토큰을 새로 받아 한 번 더 시도
+  async function q(make) {
+    await sb.auth.getSession();
+    let r = await make();
+    if (r.error && /jwt/i.test(r.error.message || '')) { await sb.auth.refreshSession(); r = await make(); }
+    return r;
+  }
   const supaDb = {
     async loadAll() {
-      const [e, r, b, d, i, n] = await Promise.all(['events','routines','blocks','routine_done','ideas','daily_notes'].map(t => sb.from(t).select('*')));
+      const [e, r, b, d, i, n] = await Promise.all(['events','routines','blocks','routine_done','ideas','daily_notes'].map(t => q(() => sb.from(t).select('*'))));
       for (const x of [e, r, b, d]) if (x.error) throw x.error;
       if (i.error) { console.warn('ideas 테이블 없음 — supabase/schema.sql 을 다시 실행하세요', i.error); }
       if (n.error) { console.warn('daily_notes 테이블 없음 — supabase/schema.sql 을 다시 실행하세요', n.error); }
@@ -381,12 +389,12 @@
       return { events: e.data, routines: r.data, blocks: b.data, done, ideas: i.error ? [] : i.data, daily_notes: n.error ? [] : n.data };
     },
     flush() {},
-    async insert(t, row) { const { data, error } = await sb.from(t).insert(row).select().single(); if (error) throw error; return data; },
-    async update(t, id, patch) { const { error } = await sb.from(t).update(patch).eq('id', id); if (error) throw error; },
-    async remove(t, id) { const { error } = await sb.from(t).delete().eq('id', id); if (error) throw error; },
+    async insert(t, row) { const { data, error } = await q(() => sb.from(t).insert(row).select().single()); if (error) throw error; return data; },
+    async update(t, id, patch) { const { error } = await q(() => sb.from(t).update(patch).eq('id', id)); if (error) throw error; },
+    async remove(t, id) { const { error } = await q(() => sb.from(t).delete().eq('id', id)); if (error) throw error; },
     async setDone(rid, date, val) {
-      const q = val ? sb.from('routine_done').insert({ routine_id: rid, date }) : sb.from('routine_done').delete().eq('routine_id', rid).eq('date', date);
-      const { error } = await q; if (error) throw error;
+      const { error } = await q(() => val ? sb.from('routine_done').insert({ routine_id: rid, date }) : sb.from('routine_done').delete().eq('routine_id', rid).eq('date', date));
+      if (error) throw error;
     },
   };
   let db = localDb;
