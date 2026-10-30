@@ -35,10 +35,13 @@ create table if not exists reminder_log (
   kind     text not null,          -- 'r' = 루틴, 'b' = 시간표 블록
   item_id  uuid not null,
   day      date not null,          -- 그 일정이 있는 날짜
-  sent_at  timestamptz not null default now(),
-  primary key (kind, item_id, day)
+  sent_at  timestamptz not null default now()
 );
 alter table reminder_log enable row level security;
+-- 알림 시각(분)도 기록 → 같은 날 시간을 바꾸면 바뀐 시각에 다시 알림
+alter table reminder_log add column if not exists due_min int not null default 0;
+alter table reminder_log drop constraint if exists reminder_log_pkey;
+alter table reminder_log add primary key (kind, item_id, day, due_min);
 
 -- 지금 보낼 때가 된 알림을 디스코드로 전송. 1분마다 실행됨
 create or replace function public.send_due_reminders()
@@ -84,9 +87,11 @@ begin
       from occ
      where occ.day + make_interval(mins => occ.start_min - occ.remind_min) <= now_kst
        and occ.day + make_interval(mins => occ.start_min - occ.remind_min) > now_kst - interval '10 minutes'
-       and not exists (select 1 from reminder_log l where l.kind = occ.kind and l.item_id = occ.id and l.day = occ.day)
+       and not exists (select 1 from reminder_log l where l.kind = occ.kind and l.item_id = occ.id and l.day = occ.day
+                                                     and l.due_min = occ.start_min - occ.remind_min)
   loop
-    insert into reminder_log (kind, item_id, day) values (r.kind, r.id, r.day) on conflict do nothing;
+    insert into reminder_log (kind, item_id, day, due_min) values (r.kind, r.id, r.day, r.start_min - r.remind_min)
+      on conflict do nothing;
     left_min := ceil(extract(epoch from (r.day + make_interval(mins => r.start_min)) - now_kst) / 60);
     msg := format(E'🔔 **%s**\n`%s–%s` · %s%s',
                   r.title,
