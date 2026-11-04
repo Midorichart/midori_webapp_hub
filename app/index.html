@@ -3,123 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0d0d0c" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eef8fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f2329" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex, nofollow">
 <title>midorichart · 툴</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
-<link rel="stylesheet" href="../assets/site.css">
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.min.css">
 <style>
-  :root { --wrap: 880px; }
+  /* 메인 페이지(포트폴리오)와 같은 도트 · 청록 스타일 */
+  :root {
+    color-scheme: light;
+    --paper: #eef8fa; --paper-2: #d7eef2; --ink: #26474f; --ink-2: #4d6c73; --mute: #89a3a8;
+    --accent: #42b7c9; --accent-ink: #ffffff; --down: #c63434; --px: 3px;
+    --font: "Galmuri11", "Galmuri9", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { color-scheme: dark; --paper: #0f2329; --paper-2: #17323a; --ink: #d6eff3; --ink-2: #a5c4ca; --mute: #6f8f95; --accent: #5ccfe0; --accent-ink: #0d2228; --down: #ff8080; }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+    color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.7; -webkit-font-smoothing: none;
+    background-color: var(--paper);
+    background-image: radial-gradient(color-mix(in srgb, var(--accent) 22%, transparent) 1px, transparent 1.4px);
+    background-size: 18px 18px;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: var(--px) solid var(--accent); outline-offset: var(--px); }
+  .px { box-shadow: 0 calc(-1 * var(--px)) 0 0 var(--ink), 0 var(--px) 0 0 var(--ink), calc(-1 * var(--px)) 0 0 0 var(--ink), var(--px) 0 0 0 var(--ink); }
 
-  .intro { padding: 56px 0 48px; }
-  .intro h1 {
-    margin: 0;
-    font-size: clamp(32px, 5.4vw, 52px);
-    line-height: 1.12;
-    letter-spacing: -0.035em;
-    font-weight: 700;
-  }
-  .intro h1 span { color: var(--mute); }
-  .intro p { margin: 18px 0 0; color: var(--ink-2); font-size: 16px; max-width: 46ch; }
-
-  .section-label {
-    margin: 0 0 14px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--mute);
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .apps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-  .app {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 220px;
-    padding: 22px;
-    text-decoration: none;
-    transition: border-color 160ms ease, transform 160ms ease;
-  }
-  .app:hover { border-color: var(--line-2); transform: translateY(-2px); }
-  .app-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-  .app-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    display: grid;
-    place-items: center;
-    background: var(--surface-2);
-    color: var(--ink);
-  }
-  .app-icon svg { width: 22px; height: 22px; }
-  .app h2 { margin: 22px 0 6px; font-size: 21px; letter-spacing: -0.025em; }
-  .app p { margin: 0; color: var(--ink-2); font-size: 14.5px; }
-  .app-foot {
-    margin-top: auto;
-    padding-top: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: var(--mute);
-    font-size: 13px;
-  }
-  .app-foot svg { width: 18px; height: 18px; color: var(--ink); transition: transform 160ms ease; }
-  .app:hover .app-foot svg { transform: translateX(3px); }
-
-  /* 로그인 */
-  .login { width: min(380px, 100%); margin: 8vh auto 0; padding: 28px; }
-  .login h1 { margin: 0; font-size: 22px; letter-spacing: -0.03em; }
-  .login p { margin: 6px 0 20px; color: var(--ink-2); font-size: 14px; }
-  .field { display: block; margin-bottom: 10px; }
-  .field span { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 5px; }
-  .field input { width: 100%; height: 42px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--page); font-size: 15px; }
-  .field input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
-  .login .btn { width: 100%; height: 42px; margin-top: 8px; }
-  .err { color: var(--down); font-size: 13px; min-height: 18px; margin-top: 4px; }
+  .site-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 58px; padding: 0 max(20px, calc((100vw - 880px) / 2)); background: var(--paper); border-bottom: var(--px) solid var(--ink); }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-size: 16px; }
+  .brand img { height: 34px; width: auto; display: block; }
+  .head-meta { display: flex; align-items: center; gap: 12px; color: var(--mute); font-size: 12px; }
   .who { max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+  .wrap { width: 100%; max-width: 880px; margin: 0 auto; padding: 0 20px 60px; flex: 1; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; margin: var(--px); padding: 4px 12px; font: inherit; font-size: 13px; color: var(--ink); background: var(--paper); border: 0; cursor: pointer; text-decoration: none; }
+  .btn:hover { background: var(--ink); color: var(--paper); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.primary:hover { background: var(--ink); color: var(--paper); }
+
+  .intro { padding: 48px 0 36px; }
+  .intro h1 { margin: 0; font-size: 33px; line-height: 1.3; font-weight: 400; }
+  .intro h1 span { color: var(--mute); }
+  .intro p { margin: 14px 0 0; color: var(--ink-2); }
+
+  .section-label { display: flex; justify-content: space-between; margin: 0 0 16px; padding-top: 14px; border-top: var(--px) dashed var(--ink); font-size: 13px; font-weight: 400; color: var(--mute); }
+  .apps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+  .app { display: flex; flex-direction: column; height: calc(100% - 2 * var(--px)); margin: var(--px); min-height: 200px; padding: 20px; text-decoration: none; background: var(--paper); }
+  .app:hover { background: var(--paper-2); }
+  .app-icon { width: 44px; height: 44px; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); }
+  .app-icon svg { width: 22px; height: 22px; shape-rendering: crispEdges; }
+  .app h2 { margin: 18px 0 6px; font-size: 20px; font-weight: 400; }
+  .app p { margin: 0; color: var(--ink-2); font-size: 13px; }
+  .app-foot { margin-top: auto; padding-top: 18px; display: flex; justify-content: space-between; color: var(--mute); font-size: 12px; }
+  .app-foot b { font-weight: 400; color: var(--accent); }
+
+  .login { width: min(380px, 100%); margin: 10vh auto 0; padding: 26px; background: var(--paper); }
+  .login h1 { margin: 0; font-size: 22px; font-weight: 400; }
+  .login p { margin: 6px 0 20px; color: var(--ink-2); font-size: 13px; }
+  .field { display: block; margin-bottom: 12px; }
+  .field span { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+  .field input { width: 100%; height: 40px; padding: 0 10px; font: inherit; color: var(--ink); background: var(--paper-2); border: 0; box-shadow: 0 0 0 2px var(--ink); }
+  .field input:focus { outline: none; box-shadow: 0 0 0 3px var(--accent); }
+  .login .btn { width: calc(100% - 2 * var(--px)); height: 38px; margin-top: 10px; }
+  .err { color: var(--down); font-size: 12px; min-height: 18px; margin-top: 4px; }
+
+  .site-foot { display: flex; justify-content: space-between; max-width: 880px; width: 100%; margin: 0 auto; padding: 18px 20px 36px; color: var(--mute); font-size: 11px; }
+  .site-foot a { text-decoration: none; }
+  .site-foot a:hover { color: var(--ink); }
+
   @media (max-width: 640px) {
-    .intro { padding: 32px 0 36px; }
+    .intro { padding: 32px 0 28px; }
+    .intro h1 { font-size: 26px; }
     .apps { grid-template-columns: 1fr; }
     .app { min-height: 0; }
+    .brand img { height: 28px; }
   }
 </style>
 </head>
 <body>
 <header class="site-head">
-  <a class="brand" href="./"><span class="brand-mark"></span>midorichart</a>
+  <a class="brand" href="./"><img src="../assets/logo.png" alt="" width="237" height="173">midorichart</a>
   <span class="head-meta">
     <span id="today"></span>
     <span class="who" id="who" hidden></span>
-    <button class="btn ghost" id="logout" type="button" hidden>로그아웃</button>
+    <button class="btn px" id="logout" type="button" hidden>로그아웃</button>
   </span>
 </header>
 
 <main class="wrap" id="gate" hidden>
-  <form class="card login" id="authForm">
+  <form class="login px" id="authForm">
     <h1>로그인</h1>
     <p>개인 툴 모음이에요. 본인 계정으로 로그인해야 열 수 있어요.</p>
     <label class="field"><span>이메일</span><input type="email" id="authEmail" required autocomplete="email"></label>
     <label class="field"><span>비밀번호</span><input type="password" id="authPw" required autocomplete="current-password"></label>
     <div class="err" id="authErr"></div>
-    <button class="btn primary" type="submit">로그인</button>
+    <button class="btn primary px" type="submit">로그인</button>
   </form>
 </main>
 
 <main class="wrap" id="apps" hidden>
   <section class="intro">
-    <p class="eyebrow">Studio Raming</p>
-    <h1>매일 쓰는 도구,<br><span>한곳에서 엽니다.</span></h1>
-    <p>일정 관리부터 판매 통계까지, 작업에 필요한 앱을 모아 둔 곳이에요.</p>
+    <h1>툴 모음<br><span>일정 · 공부 · 매출</span></h1>
+    <p>매일 쓰는 개인 툴이에요.</p>
   </section>
 
   <section>
     <h2 class="section-label"><span>앱</span><span>3</span></h2>
     <ul class="apps">
       <li>
-        <a class="app card" href="tasks/">
+        <a class="app px" href="tasks/">
           <div class="app-top">
             <span class="app-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14.5h3"/></svg>
@@ -129,12 +125,12 @@
           <p>달력, 주간 시간표, 루틴, 아이디어 보드로 하루와 일주일을 정리해요.</p>
           <div class="app-foot">
             <span>일정 · 할 일</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <b aria-hidden="true">▶</b>
           </div>
         </a>
       </li>
       <li>
-        <a class="app card" href="study/">
+        <a class="app px" href="study/">
           <div class="app-top">
             <span class="app-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15.5H5.5A1.5 1.5 0 0 1 4 18z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15.5h5.5a1.5 1.5 0 0 0 1.5-1.5z"/><path d="M7 8h1.5M15.5 8H17"/></svg>
@@ -144,12 +140,12 @@
           <p>일본어 · 영어 단어장과 시험지, 수학 · 물리 · 화학 개념과 오답노트를 한곳에서 공부해요.</p>
           <div class="app-foot">
             <span>공부 · 단어장</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <b aria-hidden="true">▶</b>
           </div>
         </a>
       </li>
       <li>
-        <a class="app card" href="sales/">
+        <a class="app px" href="sales/">
           <div class="app-top">
             <span class="app-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M6.5 16v-4M11 16V7M15.5 16v-6M20 16V4.5" /></svg>
@@ -159,7 +155,7 @@
           <p>BOOTH 주문을 모아 기간별 매출, 상품별 판매, 최근 주문을 보여줘요.</p>
           <div class="app-foot">
             <span>매출 · 통계</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <b aria-hidden="true">▶</b>
           </div>
         </a>
       </li>
