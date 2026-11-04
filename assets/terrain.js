@@ -1,6 +1,6 @@
-// 맨 위 복셀 물결 — 격자 칸 하나하나가 블록이 되어 물결 높이를 따라 계단처럼 천천히 오르내리고,
-// 커서가 닿은 곳과 파동이 지나가는 곳만 블록이 2x2 로 쪼개진다.
-// 높이장을 원근으로 투영해서 블록의 윗면 · 앞면 · 옆면을 칠한다. 캔버스를 절반 해상도로 그리고 늘려서 도트 느낌.
+// 맨 위 도트 물결 — 성긴 와이어프레임이 천천히 일렁이고, 커서가 닿은 곳과 파동이 지나가는 곳만
+// 칸을 2x2 + 대각선으로 잘게 쪼갠(테셀레이션) 삼각 격자가 서서히 진해졌다 옅어진다.
+// 높이장을 원근으로 투영해서 선과 꼭짓점 도트로 그린다. 캔버스를 절반 해상도로 그리고 늘려서 도트 느낌.
 
 // ---------- 시드 고정 값 노이즈 (점마다 아주 약한 결) ----------
 const P = new Uint8Array(512);
@@ -29,13 +29,15 @@ const RING_SPEED = 0.75; // 마우스 파동이 퍼지는 속도
 const RING_FREQ = 5.5;
 const RING_LIFE = 9;     // 파동이 사라지기까지 (초)
 const COLS = 40, ROWS = 18; // 평소 격자 (성기게)
-// 아주 옅은 하늘색 → 로고 청록 (블록 윗면은 이 중에서 높이에 따라, 앞 · 옆면은 조금 어둡게)
+const N = 2;             // 쪼갤 때 한 칸을 N x N 으로
+// 아주 옅은 하늘색 → 로고 청록 (선은 이 중에서 높이에 따라)
 const COLORS = ['#e6f5f8', '#d9f0f4', '#cbeaf0', '#bde4ec', '#acdde7', '#99d5e1', '#84cbd9', '#6dc0d1'];
 
 export function mountTerrain(canvas, host) {
   const ctx = canvas.getContext('2d');
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const Z = 6, Z0 = 1.2, DOT = 2; // DOT: 화면 px 2개 = 캔버스 점 1개
+  const ALPHAS = 10; // 투명도 단계 (선을 묶어 긋기 위해)
   let W = 0, H = 0, f = 1, hy = 0, camH = 1, cx = 0;
   let lastT = 0;
 
@@ -56,8 +58,8 @@ export function mountTerrain(canvas, host) {
   const zOf = (v) => Z * Math.pow(v / (ROWS - 1), 1.35);
   const xOf = (u, z) => ((u / (COLS - 1)) * 2 - 1) * (cx / f) * (z + Z0) * 1.08; // 줄마다 화면 너비를 꽉 채운다
 
-  // 마우스
-  const sources = []; // 파동 { x, z, t0 }
+  // 마우스: 일정 거리 이상 움직였을 때만 파동 하나
+  const sources = []; // { x, z, t0 }
   let cursor = null; // 지금 커서가 닿은 바닥 좌표
   let lastDrop = 0;
   function toGround(px, py) {
@@ -72,7 +74,7 @@ export function mountTerrain(canvas, host) {
     cursor = toGround(e.clientX, e.clientY);
     const now = performance.now() / 1000;
     const last = sources[sources.length - 1];
-    const moved = !last || Math.hypot(cursor ? cursor.x - last.x : 0, cursor ? cursor.z - last.z : 0) > 0.45;
+    const moved = !last || (cursor && Math.hypot(cursor.x - last.x, cursor.z - last.z) > 0.45);
     if (cursor && moved && now - lastDrop > 0.5) {
       lastDrop = now;
       sources.push({ x: cursor.x, z: cursor.z, t0: now });
@@ -98,7 +100,7 @@ export function mountTerrain(canvas, host) {
     return r + (noise(x * 1.3 + 11, z * 1.3 + 5) - 0.5) * 0.01;
   }
 
-  // 칸마다 얼마나 쪼개져 있을지 (0..1): 커서 근처와 파동 물결 앞부분이 지나가는 칸
+  // 그 자리가 얼마나 쪼개져 있을지 (0..1): 커서 근처와 파동 물결 앞부분이 지나가는 곳
   function activity(x, z, t) {
     let a = 0;
     if (cursor) a = Math.max(a, 1 - Math.hypot(x - cursor.x, z - cursor.z) / 0.9);
@@ -110,65 +112,88 @@ export function mountTerrain(canvas, host) {
     }
     return Math.min(1, a);
   }
-  // ---------- 복셀 ----------
-  // 칸 하나 = 블록 하나. 높이는 칸 가운데의 물결 높이를 STEP 단위로 끊어서 계단처럼.
-  // 커서 · 파동이 지나가는 칸(활성도 > SPLIT)은 블록을 2x2 로 쪼갠다.
-  const STEP = 0.007;   // 높이 계단 한 칸
-  const BASE = -0.022;  // 블록 바닥 높이 (앞면 두께)
-  const GAP = 0.07;     // 블록 사이 틈 (칸 크기 대비)
-  const SPLIT = 0.42;   // 이만큼 활성이면 2x2 로
-  const shade = (hex, k) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * k).toString(16).padStart(2, '0')).join('');
-  const TOP = COLORS;
-  const FRONT = COLORS.map((c) => shade(c, 0.9));
-  const SIDE = COLORS.map((c) => shade(c, 0.95));
-  // 그리는 순서: 가운데에서 먼 열부터 (원근상 안쪽 옆면이 가려지게)
-  const colOrder = [...Array(COLS - 1).keys()].sort((a, b) => Math.abs(b + 0.5 - (COLS - 1) / 2) - Math.abs(a + 0.5 - (COLS - 1) / 2));
 
   function draw(t) {
     while (sources.length && t - sources[0].t0 > RING_LIFE) sources.shift();
-    const proj = (u, v, h) => {
-      const z = zOf(v), x = xOf(u, z), k = f / (z + Z0);
-      return [cx + x * k, hy + (camH - h) * k];
+
+    const BANDS = 3;
+    // 묶음: 투명도 단계 × 색 × 거리 — 같은 묶음끼리 한 번에 긋는다
+    const paths = Array.from({ length: (ALPHAS + 1) * COLORS.length * BANDS }, () => new Path2D());
+    const colorOf = (h) => Math.max(0, Math.min(COLORS.length - 1, Math.round(3 + h * 55)));
+    const bandOf = (v) => Math.min(BANDS - 1, Math.floor((v / ROWS) * BANDS));
+    const pt = (u, v) => {
+      const z = zOf(v), x = xOf(u, z), h = height(x, z, t), k = f / (z + Z0);
+      return [Math.round(cx + x * k), Math.round(hy + (camH - h) * k), h];
     };
-    const quad = (a, b, c, d, color) => {
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.lineTo(d[0], d[1]);
-      ctx.closePath();
-      ctx.fill();
-    };
-    // 블록 하나: (u0,v0)~(u1,v1) 바닥 칸, 가운데 물결 높이로
-    const voxel = (u0, v0, u1, v1) => {
-      const g = (u1 - u0) * GAP;
-      u0 += g; u1 -= g; v0 += g; v1 -= g;
-      const uc = (u0 + u1) / 2, vc = (v0 + v1) / 2, zc = zOf(vc);
-      const h = Math.round(height(xOf(uc, zc), zc, t) / STEP) * STEP;
-      const A = proj(u0, v0, h), B = proj(u1, v0, h), C = proj(u1, v1, h), D = proj(u0, v1, h);
-      if (Math.max(A[0], B[0], C[0], D[0]) < -4 || Math.min(A[0], B[0], C[0], D[0]) > W + 4 || Math.min(A[1], D[1]) > H + 4) return;
-      const ci = Math.max(0, Math.min(COLORS.length - 1, Math.round(3 + h * 55)));
-      const A0 = proj(u0, v0, BASE), B0 = proj(u1, v0, BASE);
-      if (uc > (COLS - 1) / 2) quad(A, D, proj(u0, v1, BASE), A0, SIDE[ci]); // 오른쪽 블록은 왼쪽 옆면이 보임
-      else quad(B, C, proj(u1, v1, BASE), B0, SIDE[ci]);
-      quad(A, B, B0, A0, FRONT[ci]); // 앞면
-      quad(A, B, C, D, TOP[ci]);      // 윗면
+    // (u,v) 에서 (u2,v2) 까지를 n 토막으로 나눠 표면을 따라 긋는다. op: 0..1 투명도
+    const line = (u, v, u2, v2, n, op = 1) => {
+      const al = Math.round(op * ALPHAS);
+      if (al <= 0) return;
+      let a = pt(u, v);
+      for (let s = 1; s <= n; s++) {
+        const b = pt(u + ((u2 - u) * s) / n, v + ((v2 - v) * s) / n);
+        if (!((a[0] < -8 && b[0] < -8) || (a[0] > W + 8 && b[0] > W + 8) || (a[1] > H + 8 && b[1] > H + 8))) {
+          const path = paths[(al * COLORS.length + colorOf((a[2] + b[2]) / 2)) * BANDS + bandOf(v)];
+          path.moveTo(a[0], a[1]);
+          path.lineTo(b[0], b[1]);
+        }
+        a = b;
+      }
     };
 
+    // 1) 기본 격자: 늘 그대로 (토막을 나눠 물결을 매끈하게 따라감)
+    for (let j = 0; j < ROWS; j++) for (let i = 0; i < COLS - 1; i++) line(i, j, i + 1, j, 3);
+    for (let j = 0; j < ROWS - 1; j++) for (let i = 0; i < COLS; i++) line(i, j, i, j + 1, 3);
+
+    // 2) 쪼개진 메시: 칸을 가로지르는 이어진 보조선 + 한 방향 대각선(삼각 격자).
+    //    선 토막마다 그 자리의 활성도로 투명도를 정해서, 칸 경계 없이 매끈하게 옅어졌다 진해진다.
+    const fadeAt = (u, v) => {
+      const z = zOf(v);
+      const a = activity(xOf(u, z), z, t);
+      return a * a * (3 - 2 * a);
+    };
+    const seg = (u, v, u2, v2) => {
+      const op = fadeAt((u + u2) / 2, (v + v2) / 2);
+      if (op > 0.04) line(u, v, u2, v2, 1, op);
+    };
+    const d = 1 / N;
+    for (let j = 0; j < ROWS - 1; j++) for (let i = 0; i < COLS - 1; i++) {
+      const zc = zOf(j + 0.5);
+      if (activity(xOf(i + 0.5, zc), zc, t) < 0.02) continue; // 조용한 칸은 건너뜀
+      for (let k = 0; k < N; k++) for (let s = 1; s < N; s++) {
+        seg(i + k * d, j + s * d, i + (k + 1) * d, j + s * d); // 가로 보조선
+        seg(i + s * d, j + k * d, i + s * d, j + (k + 1) * d); // 세로 보조선
+      }
+      for (let p = 0; p < N; p++) for (let q = 0; q < N; q++) {
+        seg(i + p * d, j + q * d, i + (p + 1) * d, j + (q + 1) * d); // 대각선 (모두 같은 방향)
+      }
+    }
+
     ctx.clearRect(0, 0, W, H);
-    // 먼 줄부터 가까운 줄로
-    for (let j = ROWS - 2; j >= 0; j--) {
-      ctx.globalAlpha = 0.55 + 0.45 * (1 - j / (ROWS - 2));
-      for (const i of colOrder) {
-        const zc = zOf(j + 0.5);
-        if (activity(xOf(i + 0.5, zc), zc, t) > SPLIT) {
-          // 2x2: 먼 쪽 줄 먼저, 바깥쪽 먼저
-          const right = i + 0.5 > (COLS - 1) / 2;
-          for (const q of [1, 0]) for (const p of right ? [1, 0] : [0, 1]) voxel(i + p / 2, j + q / 2, i + (p + 1) / 2, j + (q + 1) / 2);
-        } else {
-          voxel(i, j, i + 1, j + 1);
+    ctx.save();
+    ctx.translate(0.5, 0.5); // 1px 선이 번지지 않게
+    ctx.lineWidth = 1;
+    for (let b = BANDS - 1; b >= 0; b--) { // 먼 묶음부터
+      for (let al = 1; al <= ALPHAS; al++) {
+        ctx.globalAlpha = [0.85, 0.6, 0.38][b] * (al / ALPHAS);
+        for (let c = 0; c < COLORS.length; c++) {
+          ctx.strokeStyle = COLORS[c];
+          ctx.stroke(paths[(al * COLORS.length + c) * BANDS + b]);
         }
       }
     }
-    ctx.globalAlpha = 1;
+    // 3) 기본 격자 꼭짓점 도트
+    for (let j = ROWS - 1; j >= 0; j--) {
+      const size = j < ROWS * 0.3 ? 2 : 1;
+      ctx.globalAlpha = 0.45 + 0.45 * (1 - j / (ROWS - 1));
+      for (let i = 0; i < COLS; i++) {
+        const [sx, sy, h] = pt(i, j);
+        if (sx < -4 || sx > W + 4 || sy > H + 4) continue;
+        ctx.fillStyle = COLORS[Math.min(COLORS.length - 1, colorOf(h) + 1)];
+        ctx.fillRect(sx - (size >> 1), sy - (size >> 1), size, size);
+      }
+    }
+    ctx.restore();
   }
 
   layout();
