@@ -28,7 +28,7 @@ const IDLE_FREQ = 3.6;   // 물결 촘촘함 (작을수록 파장이 김)
 const RING_SPEED = 0.75; // 마우스 파동이 퍼지는 속도
 const RING_FREQ = 5.5;
 const RING_LIFE = 9;     // 파동이 사라지기까지 (초)
-const COLS = 40, ROWS = 18; // 평소 격자 (성기게)
+const COLS_MAX = 40, ROWS = 18; // 평소 격자 (성기게). 가로 칸 수는 화면 비율에 맞춰 줄어든다
 const N = 2;             // 쪼갤 때 한 칸을 N x N 으로
 // 아주 옅은 하늘색 → 로고 청록 (선은 이 중에서 높이에 따라)
 const COLORS = ['#e6f5f8', '#d9f0f4', '#cbeaf0', '#bde4ec', '#acdde7', '#99d5e1', '#84cbd9', '#6dc0d1'];
@@ -38,7 +38,7 @@ export function mountTerrain(canvas, host) {
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const Z = 6, Z0 = 1.2, DOT = 2; // DOT: 화면 px 2개 = 캔버스 점 1개
   const ALPHAS = 10; // 투명도 단계 (선을 묶어 긋기 위해)
-  let W = 0, H = 0, f = 1, hy = 0, camH = 1, cx = 0;
+  let W = 0, H = 0, f = 1, hy = 0, camH = 1, cx = 0, COLS = COLS_MAX;
   let lastT = 0;
 
   function layout() {
@@ -48,7 +48,9 @@ export function mountTerrain(canvas, host) {
     H = Math.max(2, Math.round(ch / DOT));
     canvas.width = W; canvas.height = H;
     canvas.style.width = cw + 'px'; canvas.style.height = ch + 'px';
-    f = W * 0.42;
+    // 좁고 긴 화면(휴대폰)에서도 칸이 세로로 늘어나지 않게: 원근은 높이 기준으로도 잡고, 가로 칸 수를 줄인다
+    f = Math.max(W, H * 1.8) * 0.42;
+    COLS = Math.max(14, Math.min(COLS_MAX, Math.round(COLS_MAX * W / (H * 1.8))));
     hy = H * 0.42;
     camH = (H * 1.02 - hy) * Z0 / f;
     cx = W / 2;
