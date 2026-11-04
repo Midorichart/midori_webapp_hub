@@ -5,43 +5,119 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d0d0c" media="(prefers-color-scheme: dark)">
-<title>Studio Raming · midorichart</title>
-<meta name="description" content="Studio Raming 포트폴리오 · 판매 페이지">
+<title>MIDORI · Studio Raming — WARUDO 배경 · 소품</title>
+<meta name="description" content="WARUDO 3D 배경 · 소품 모델러 MIDORI(緑チャート)의 포트폴리오. Studio Raming 에서 버튜버 방송용 배경과 소품, 셰이더와 인터랙티브 기능을 만듭니다.">
+<meta property="og:title" content="MIDORI · Studio Raming">
+<meta property="og:description" content="WARUDO 3D 배경 · 소품 모델러 포트폴리오">
+<meta property="og:image" content="https://midorichart.com/assets/portfolio/2104784888172077391-1.webp">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <link rel="stylesheet" href="assets/site.css">
-<style>
-  :root { --wrap: 880px; }
-  body { display: flex; flex-direction: column; }
-  .wrap { flex: 1; width: 100%; }
-  .intro { padding: 96px 0 48px; }
-  .intro h1 {
-    margin: 0;
-    font-size: clamp(34px, 6vw, 60px);
-    line-height: 1.1;
-    letter-spacing: -0.035em;
-    font-weight: 700;
-  }
-  .intro h1 span { color: var(--mute); }
-  .intro p { margin: 20px 0 0; color: var(--ink-2); font-size: 16px; max-width: 46ch; }
-  @media (max-width: 640px) { .intro { padding: 56px 0 36px; } }
-</style>
+<link rel="stylesheet" href="assets/portfolio.css">
 </head>
 <body>
 <header class="site-head">
   <a class="brand" href="./"><span class="brand-mark"></span>midorichart</a>
+  <nav class="nav" aria-label="섹션">
+    <a href="#env">배경</a>
+    <a href="#tech">기능</a>
+    <a href="#props">소품</a>
+    <a href="#contact">문의</a>
+  </nav>
 </header>
 
 <main class="wrap">
-  <section class="intro">
-    <p class="eyebrow">Studio Raming</p>
-    <h1>포트폴리오와 판매 페이지를<br><span>준비하고 있어요.</span></h1>
-    <p>작업물과 판매 중인 상품을 곧 이곳에서 소개할게요.</p>
+  <section class="hero">
+    <div class="hero-text">
+      <p class="eyebrow">Studio Raming · WARUDO 3D Environment &amp; Props</p>
+      <h1>MIDORI<span> / 緑チャート</span></h1>
+      <p class="lead">버튜버 방송용 WARUDO 배경과 소품을 만듭니다.<br>모델링과 텍스처부터 셰이더, 방송 중에 조작하는 인터랙티브 기능까지 직접 만들어요.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://raming.booth.pm/" target="_blank" rel="noopener">BOOTH 스토어</a>
+        <a class="btn" href="https://studioraming.com/" target="_blank" rel="noopener">Studio Raming</a>
+        <a class="btn ghost" href="https://x.com/midorichart" target="_blank" rel="noopener">X @midorichart</a>
+      </div>
+      <ul class="tools" aria-label="사용 툴">
+        <li>Blender</li><li>Unity (BRP · URP)</li><li>WARUDO</li><li>Geometry Nodes</li><li>Shader Graph</li><li>Houdini</li><li>C#</li>
+      </ul>
+    </div>
+    <button class="hero-art" type="button" data-open="2104784888172077391" aria-label="소금사막 밤 버전 크게 보기">
+      <img src="assets/portfolio/2104784888172077391-1.webp" alt="소금사막 WARUDO 배경, 밤 버전" width="1600" height="895" fetchpriority="high">
+      <span class="hero-cap">소금사막 — 밤 버전 · 2026</span>
+    </button>
+  </section>
+
+  <section class="sec" id="env">
+    <div class="sec-head">
+      <h2>WARUDO 배경</h2>
+      <p>방송에 바로 쓰는 3D 배경. 일반(BRP) · 프로(URP), 낮 · 밤 버전으로 만들어요.</p>
+    </div>
+    <ul class="grid" data-cat="env"></ul>
+    <button class="btn more" type="button" data-more="env" hidden>더 보기</button>
+  </section>
+
+  <section class="sec" id="tech">
+    <div class="sec-head">
+      <h2>기능 · 셰이더 · 툴</h2>
+      <p>배경을 더 쓰기 쉽게 만드는 플러그인과 셰이더, 절차적 모델링 실험. 영상은 X 에서 재생돼요.</p>
+    </div>
+    <ul class="grid" data-cat="tech"></ul>
+    <button class="btn more" type="button" data-more="tech" hidden>더 보기</button>
+  </section>
+
+  <section class="sec" id="props">
+    <div class="sec-head">
+      <h2>소품 · 모델링</h2>
+      <p>악기와 장비, 인형, 가구, 움직이는 소품들.</p>
+    </div>
+    <ul class="grid" data-cat="props"></ul>
+    <button class="btn more" type="button" data-more="props" hidden>더 보기</button>
+  </section>
+
+  <section class="sec contact card" id="contact">
+    <div>
+      <p class="eyebrow">Contact</p>
+      <h2>작업 · 협업 문의</h2>
+      <p>이메일이나 X DM 으로 연락 주세요. 판매 중인 배경과 소품은 BOOTH 와 Studio Raming 스토어에서 볼 수 있어요.</p>
+    </div>
+    <ul class="links">
+      <li><a href="mailto:midorichart@gmail.com"><span>이메일</span>midorichart@gmail.com</a></li>
+      <li><a href="https://x.com/midorichart" target="_blank" rel="noopener"><span>X</span>@midorichart</a></li>
+      <li><a href="https://raming.booth.pm/" target="_blank" rel="noopener"><span>BOOTH</span>raming.booth.pm</a></li>
+      <li><a href="https://studioraming.com/" target="_blank" rel="noopener"><span>스토어</span>studioraming.com</a></li>
+    </ul>
   </section>
 </main>
 
 <footer class="site-foot">
-  <span>© 2026 Studio Raming</span>
+  <span>© 2026 MIDORI · Studio Raming</span>
   <span>midorichart.com</span>
 </footer>
+
+<dialog class="viewer" id="viewer" aria-label="작업물 보기">
+  <div class="v-stage">
+    <button class="v-nav prev" type="button" data-step="-1" aria-label="이전 이미지">‹</button>
+    <figure class="v-figure">
+      <img id="v-img" alt="">
+      <a class="v-play" id="v-play" target="_blank" rel="noopener" hidden>▶ X 에서 영상 보기</a>
+    </figure>
+    <button class="v-nav next" type="button" data-step="1" aria-label="다음 이미지">›</button>
+  </div>
+  <div class="v-info">
+    <div>
+      <p class="v-date" id="v-date"></p>
+      <h3 id="v-title"></h3>
+      <p class="v-desc" id="v-desc"></p>
+    </div>
+    <div class="v-actions">
+      <span class="v-count" id="v-count"></span>
+      <a class="btn" id="v-buy" target="_blank" rel="noopener" hidden>구매 페이지</a>
+      <a class="btn" id="v-x" target="_blank" rel="noopener">X 에서 보기</a>
+      <button class="btn primary" type="button" id="v-close">닫기</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="assets/portfolio/works.js"></script>
+<script src="assets/portfolio.js"></script>
 </body>
 </html>
