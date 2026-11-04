@@ -112,7 +112,7 @@ BGS.forEach((g, n) => {
   html += `<li class="stage snap reveal">
     <div class="track-bg">
       <button class="stage-view" type="button" data-bg="${g.key}" data-cycle="${n}" aria-label="${esc(T().view(g.name))}">
-        <img src="${DIR}${cover.src}.webp" alt="${esc(g.name)}" width="${cover.w}" height="${cover.h}" loading="${n < 2 ? 'eager' : 'lazy'}" decoding="async">
+        <img src="${DIR}${cover.src}.webp" alt="${esc(g.name)}" width="${cover.w}" height="${cover.h}" loading="lazy" decoding="async">
       </button>
       <div class="stage-info">
         <div class="stage-head">
