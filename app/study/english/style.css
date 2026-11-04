@@ -1,5 +1,5 @@
 /* 일본어 앱과 같은 화면 틀(색·단어 표·시험지·문법 카드)을 쓰고, 영어 단어장에만 필요한 것을 덧붙인다. */
-@import url('../japanese/style.css');
+@import url('../japanese/style.css?v=a014e544');
 
 .add-row input.wide { flex: 2; }
 

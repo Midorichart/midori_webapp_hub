@@ -2,7 +2,7 @@
 // 인터페이스:
 //   subscribe(col, cb) -> unsubscribe   (cb 는 변경될 때마다 해당 컬렉션 전체 배열을 받음)
 //   add(col, data) / update(col, id, data) / remove(col, id) / bulkAdd(col, list)
-import { createSync } from '../../shared/sync.js';
+import { createSync } from '../../shared/sync.js?v=a8780c44';
 
 export const COLLECTIONS = ['vocab', 'grammar', 'known']; // known: 한자 표시 { kanji, status: 'known' | 'confused' }
 

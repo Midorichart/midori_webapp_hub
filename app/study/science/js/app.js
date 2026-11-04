@@ -1,5 +1,5 @@
-import { COLLECTIONS, createStore as createSyncedStore, newId } from './store.js';
-import * as images from './images.js';
+import { COLLECTIONS, createStore as createSyncedStore, newId } from './store.js?v=f0136b06';
+import * as images from './images.js?v=5fbf212d';
 
 // 수학·물리·화학이 같은 코드를 쓴다. 과목은 주소의 ?subject= 로 정해진다 (학습 대시보드에서 들어옴).
 const SUBJECTS = {

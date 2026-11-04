@@ -1,7 +1,7 @@
 // 학습 대시보드: 과목별 앱이 저장해 둔 데이터(localStorage)를 읽어서 진도만 요약한다.
 // 저장 형식은 japanese/js/store.js, english/js/store.js, science/js/store.js 와 같다.
 // 계정 연결(config.js)이 있으면 로그인 · 동기화 상태 · 전체 백업/복원도 여기서 한다.
-import * as sync from './shared/sync.js';
+import * as sync from './shared/sync.js?v=a8780c44';
 
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) =>

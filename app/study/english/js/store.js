@@ -4,7 +4,7 @@
 //   add(col, data) / update(col, id, data) / remove(col, id) / bulkAdd(col, list)
 // templates: 라이팅·스피킹 템플릿 구절, answers: 풀이 노트 (둘 다 skill: 'writing' | 'speaking')
 // (예전 Grammar 탭의 'grammar' 데이터는 지우지 않고 그대로 남겨 둔다)
-import { createSync } from '../../shared/sync.js';
+import { createSync } from '../../shared/sync.js?v=a8780c44';
 
 export const COLLECTIONS = ['vocab', 'templates', 'answers'];
 
@@ -57,6 +57,10 @@ export function createLocalStore() {
     },
     async update(col, id, data) {
       write(col, readLocal(col).map((item) => (item.id === id ? { ...item, ...data } : item)));
+    },
+    // 여러 항목을 한 번에 고친다 (patches: { id: 바꿀 내용 })
+    async updateMany(col, patches) {
+      write(col, readLocal(col).map((item) => (patches[item.id] ? { ...item, ...patches[item.id] } : item)));
     },
     async remove(col, id) {
       write(col, readLocal(col).filter((item) => item.id !== id));

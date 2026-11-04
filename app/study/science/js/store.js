@@ -3,7 +3,7 @@
 //   subscribe(col, cb) -> unsubscribe   (cb 는 변경될 때마다 해당 컬렉션 전체 배열을 받음)
 //   add(col, data) -> id / update(col, id, data) / remove(col, id) / bulkAdd(col, list)
 // 이미지는 크기 때문에 따로 IndexedDB(images.js)에 둔다.
-import { createSync, APPS } from '../../shared/sync.js';
+import { createSync, APPS } from '../../shared/sync.js?v=a8780c44';
 
 export const COLLECTIONS = ['concepts', 'notes'];
 

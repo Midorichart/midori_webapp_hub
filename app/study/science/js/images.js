@@ -1,6 +1,6 @@
 // 첨부 이미지는 IndexedDB 에 { id, blob } 으로 저장한다 (localStorage 는 용량이 작아서).
 // 로그인돼 있으면 계정(Supabase Storage)에도 올리고, 이 기기에 없는 이미지는 계정에서 받아 온다.
-import { openDB, idb, queueImage, downloadImage, listImages, configured } from '../../shared/sync.js';
+import { openDB, idb, queueImage, downloadImage, listImages, configured } from '../../shared/sync.js?v=a8780c44';
 
 let dbp;
 let dbName;

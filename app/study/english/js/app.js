@@ -1,4 +1,4 @@
-import { COLLECTIONS, createLocalStore } from './store.js';
+import { COLLECTIONS, createLocalStore } from './store.js?v=09d41696';
 
 // 영어 앱. 단어장·시험지는 일본어 앱(japanese/js/app.js)과 같은 방식이고, 단어에 읽기 대신 예문이 있다.
 
@@ -150,27 +150,30 @@ const SORTS = {
   abc: (a, b) => a.word.localeCompare(b.word, 'en', { sensitivity: 'base' }),
 };
 
-// 예문 속 그 단어를 <mark> 로 감싼다. 끝의 e · y 를 떼고 뒤에 붙는 글자를 허용해서
-// paved · values · rationalized · delves 같은 꼴도 찾는다. 여러 단어(pave the way)는 사이 공백 · 하이픈을 허용.
-// 불규칙 변화(rise → rose)는 못 찾으면 그냥 둔다. 뜻 칸처럼 괄호 안 설명은 무시.
+// 예문에서 _밑줄 사이_ 에 넣은 부분을 파랗게 (<mark>) 보여 준다.
+const markExample = (example) => esc(example).replace(/_([^_\n]+)_/g, '<mark class="hl">$1</mark>');
+
+// 예전에 적은 예문(밑줄 표시가 없던 것)에 한 번만 _단어_ 를 넣어 준다. 처리한 단어에는 hl: 1 을 남겨서 다시 건드리지 않는다.
+// 끝의 e · y 를 떼고 뒤에 붙는 글자를 허용해서 paved · values · rationalized · delves 같은 꼴도 찾는다.
+// 여러 단어(pave the way)는 사이 공백 · 하이픈을 허용. 불규칙 변화(rise → rose)는 못 찾으면 그대로 둔다.
 const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-function markWord(example, word) {
+function underscoreWord(example, word) {
+  if (!example || example.includes('_')) return example;
   const parts = String(word ?? '').toLowerCase().replace(/\(.*?\)/g, ' ').split(/\s+/).filter(Boolean);
-  if (!parts.length) return esc(example);
+  if (!parts.length) return example;
   const pat = parts
     .map((p) => {
       if (p.length <= 3 || !/[a-z]$/.test(p)) return reEsc(p);
       return reEsc(p.length > 4 && /[ey]$/.test(p) ? p.slice(0, -1) : p) + '[a-z]*';
     })
     .join('[\\s-]+');
-  const re = new RegExp(`(?<![a-z])${pat}(?![a-z])`, 'gi');
-  let out = '';
-  let at = 0;
-  for (const m of String(example).matchAll(re)) {
-    out += esc(example.slice(at, m.index)) + `<mark class="hl">${esc(m[0])}</mark>`;
-    at = m.index + m[0].length;
-  }
-  return out + esc(example.slice(at));
+  return example.replace(new RegExp(`(?<![a-z])${pat}(?![a-z])`, 'gi'), '_$&_');
+}
+
+function markOldExamples(items) {
+  const patches = {};
+  for (const v of items) if (!v.hl) patches[v.id] = { hl: 1, example: underscoreWord(v.example, v.word) };
+  if (Object.keys(patches).length) run(state.store.updateMany('vocab', patches));
 }
 
 function vocabEntry(v, done) {
@@ -182,7 +185,7 @@ function vocabEntry(v, done) {
         ${'<td rowspan="2"></td>'.repeat(done ? 1 : 3)}
         <td class="actions" rowspan="2"><button type="button" data-act="save" class="icon" title="저장">✓</button><button type="button" data-act="cancel" class="icon" title="취소">↺</button></td>
       </tr>
-      <tr class="ex-row"><td colspan="2"><input class="en" name="example" value="${esc(v.example)}" placeholder="예문"></td></tr>
+      <tr class="ex-row"><td colspan="2"><input class="en" name="example" value="${esc(v.example)}" placeholder="예문 (_단어_ 처럼 밑줄 사이는 파랗게)"></td></tr>
     </tbody>`;
   }
   const span = v.example ? ' rowspan="2"' : '';
@@ -202,7 +205,7 @@ function vocabEntry(v, done) {
       <td class="ck-cell"${span}><input type="checkbox" class="ck ck-done" data-done aria-label="학습 완료"${v.done ? ' checked' : ''}></td>
       <td class="actions"${span}><button type="button" data-act="edit" class="icon" title="수정">✎</button><button type="button" data-act="del" class="icon danger" title="삭제">×</button></td>
     </tr>
-    ${v.example ? `<tr class="ex-row"><td colspan="2" class="en example maskable">${markWord(v.example, v.word)}</td></tr>` : ''}
+    ${v.example ? `<tr class="ex-row"><td colspan="2" class="en example maskable">${markExample(v.example)}</td></tr>` : ''}
   </tbody>`;
 }
 
@@ -265,7 +268,7 @@ function bindVocab() {
     if (!data.word) return;
     state.vocabView = 'study';
     state.page.vocab = state.sort === 'new' ? 1 : Infinity; // 새 단어가 보이는 페이지로 (알파벳순이면 마지막 쪽 근처)
-    run(state.store.add('vocab', data));
+    run(state.store.add('vocab', { ...data, hl: 1 }));
     e.target.reset();
     e.target.word.focus();
   });
@@ -1222,6 +1225,7 @@ function init() {
     state.store.subscribe(col, (items) => {
       state.data[col] = items;
       renderers[col]();
+      if (col === 'vocab') markOldExamples(items);
     });
   }
 

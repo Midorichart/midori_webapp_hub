@@ -1,4 +1,4 @@
-import { COLLECTIONS, createLocalStore } from './store.js';
+import { COLLECTIONS, createLocalStore } from './store.js?v=8e1cc7c6';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
