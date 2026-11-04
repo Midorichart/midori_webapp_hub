@@ -11,6 +11,7 @@
 - `shared/sync.js` — Supabase 동기화 (아래 참고)
 - `config.js` — Supabase URL / Publishable key
 - `supabase/schema.sql` — Supabase에 만들 테이블 · 이미지 저장소
+- `scripts/import-units.mjs` — Obsidian 진도 체크리스트(md) → `science/data/units-*.json` 단원 트리. 허브 폴더에서 `node study/scripts/import-units.mjs`
 
 ## Supabase 연결
 1. Supabase 대시보드 → **SQL Editor** → `supabase/schema.sql` 내용을 붙여넣고 Run (여러 번 실행해도 안전)
@@ -27,8 +28,8 @@
 - 로그인 전에 이 브라우저에 저장해 둔 데이터가 있으면 처음 로그인할 때 계정에 합칠지 묻습니다. 로그아웃하면 이 브라우저의 학습 데이터 사본은 지웁니다.
 
 ## PC 앱 데이터 옮기기
-예전 PC 앱(Electron, `midori_StudyApp`)의 데이터는 그 프로젝트에서 `npx electron scripts/export-all.cjs` 로 전체 백업 파일을 만든 뒤,
-여기 대시보드의 **백업 가져오기** 로 넣으면 계정에 올라갑니다.
+예전 PC 앱(Electron 학습 대시보드)의 데이터는 `midori_StudyApp/backup/midori-study-all-2026-11-04.json` 으로 뽑아 두었습니다.
+여기 대시보드의 **백업 가져오기** 로 넣으면 계정에 올라갑니다. (그 PC 앱은 이제 midorichart.com 을 여는 데스크톱 앱으로 바뀌었습니다.)
 
 ## 로컬에서 보기
 허브 폴더에서 `python -m http.server` 후 http://localhost:8000/study/ (ES 모듈이라 파일을 바로 열면 안 됩니다).
