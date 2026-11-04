@@ -20,6 +20,9 @@
 .en-vocab td.example { font-size: 14px; color: var(--muted); font-style: italic; }
 .en-vocab td.example::before { content: '“'; }
 .en-vocab td.example::after { content: '”'; }
+/* 예문 속 그 단어 (파랑) */
+.en-vocab td.example mark.hl { background: none; color: var(--lv-n4); font-weight: 500; }
+.hide-example td.example:not(.revealed) mark.hl { color: transparent; }
 
 .en-vocab tbody tr:hover { background: none; }
 .en-vocab tbody:hover { background: color-mix(in srgb, var(--surface-2) 60%, transparent); }

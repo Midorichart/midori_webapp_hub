@@ -38,7 +38,7 @@ export function mountTerrain(canvas, host) {
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const Z = 6, Z0 = 1.2, DOT = 2; // DOT: 화면 px 2개 = 캔버스 점 1개
   const ALPHAS = 10; // 투명도 단계 (선을 묶어 긋기 위해)
-  let W = 0, H = 0, f = 1, hy = 0, camH = 1, cx = 0, COLS = COLS_MAX;
+  let W = 0, H = 0, f = 1, hy = 0, camH = 1, cx = 0, COLS = COLS_MAX, conv = 0;
   let lastT = 0;
 
   function layout() {
@@ -48,9 +48,12 @@ export function mountTerrain(canvas, host) {
     H = Math.max(2, Math.round(ch / DOT));
     canvas.width = W; canvas.height = H;
     canvas.style.width = cw + 'px'; canvas.style.height = ch + 'px';
-    // 좁고 긴 화면(휴대폰)에서도 칸이 세로로 늘어나지 않게: 원근은 높이 기준으로도 잡고, 가로 칸 수를 줄인다
+    // 넓은 화면: 줄마다 화면 너비를 꽉 채운다 (세로선이 나란히).
+    // 좁고 긴 화면(휴대폰): 그렇게 하면 세로 줄무늬처럼 보여서, 진짜 바닥처럼 세로선이 지평선 쪽으로 모이게 한다 (conv → 1).
     f = Math.max(W, H * 1.8) * 0.42;
-    COLS = Math.max(14, Math.min(COLS_MAX, Math.round(COLS_MAX * W / (H * 1.8))));
+    conv = Math.max(0, Math.min(1, (1.2 - W / H) / 0.6));
+    const flatCols = Math.max(14, Math.min(COLS_MAX, Math.round(COLS_MAX * W / (H * 1.8))));
+    COLS = Math.round(flatCols + (COLS_MAX - flatCols) * conv);
     hy = H * 0.42;
     camH = (H * 1.02 - hy) * Z0 / f;
     cx = W / 2;
@@ -58,7 +61,8 @@ export function mountTerrain(canvas, host) {
 
   // 격자 좌표(u: 0..COLS-1, v: 0..ROWS-1, 소수 가능) → 바닥 좌표
   const zOf = (v) => Z * Math.pow(v / (ROWS - 1), 1.35);
-  const xOf = (u, z) => ((u / (COLS - 1)) * 2 - 1) * (cx / f) * (z + Z0) * 1.08; // 줄마다 화면 너비를 꽉 채운다
+  // conv 0: 줄마다 화면 너비를 꽉 채움 / conv 1: 가장 먼 줄 너비로 고정된 바닥 격자 (가까울수록 칸이 커 보임)
+  const xOf = (u, z) => ((u / (COLS - 1)) * 2 - 1) * (cx / f) * ((z + Z0) * (1 - conv) + (Z + Z0) * conv) * 1.08;
 
   // 마우스: 일정 거리 이상 움직였을 때만 파동 하나
   const sources = []; // { x, z, t0 }

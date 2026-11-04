@@ -150,6 +150,29 @@ const SORTS = {
   abc: (a, b) => a.word.localeCompare(b.word, 'en', { sensitivity: 'base' }),
 };
 
+// 예문 속 그 단어를 <mark> 로 감싼다. 끝의 e · y 를 떼고 뒤에 붙는 글자를 허용해서
+// paved · values · rationalized · delves 같은 꼴도 찾는다. 여러 단어(pave the way)는 사이 공백 · 하이픈을 허용.
+// 불규칙 변화(rise → rose)는 못 찾으면 그냥 둔다. 뜻 칸처럼 괄호 안 설명은 무시.
+const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function markWord(example, word) {
+  const parts = String(word ?? '').toLowerCase().replace(/\(.*?\)/g, ' ').split(/\s+/).filter(Boolean);
+  if (!parts.length) return esc(example);
+  const pat = parts
+    .map((p) => {
+      if (p.length <= 3 || !/[a-z]$/.test(p)) return reEsc(p);
+      return reEsc(p.length > 4 && /[ey]$/.test(p) ? p.slice(0, -1) : p) + '[a-z]*';
+    })
+    .join('[\\s-]+');
+  const re = new RegExp(`(?<![a-z])${pat}(?![a-z])`, 'gi');
+  let out = '';
+  let at = 0;
+  for (const m of String(example).matchAll(re)) {
+    out += esc(example.slice(at, m.index)) + `<mark class="hl">${esc(m[0])}</mark>`;
+    at = m.index + m[0].length;
+  }
+  return out + esc(example.slice(at));
+}
+
 function vocabEntry(v, done) {
   if (state.editing.vocab === v.id) {
     return `<tbody data-id="${esc(v.id)}" class="editing">
@@ -179,7 +202,7 @@ function vocabEntry(v, done) {
       <td class="ck-cell"${span}><input type="checkbox" class="ck ck-done" data-done aria-label="학습 완료"${v.done ? ' checked' : ''}></td>
       <td class="actions"${span}><button type="button" data-act="edit" class="icon" title="수정">✎</button><button type="button" data-act="del" class="icon danger" title="삭제">×</button></td>
     </tr>
-    ${v.example ? `<tr class="ex-row"><td colspan="2" class="en example maskable">${esc(v.example)}</td></tr>` : ''}
+    ${v.example ? `<tr class="ex-row"><td colspan="2" class="en example maskable">${markWord(v.example, v.word)}</td></tr>` : ''}
   </tbody>`;
 }
 
