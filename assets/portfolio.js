@@ -93,24 +93,11 @@ for (const w of ETC) {
   PERIOD[k].push(w);
 }
 let cycleTimers = [];
-function renderStages(animate) {
-let html = '';
-let year = '';
-BGS.forEach((g, n) => {
-  const y = g.date.slice(0, 4);
-  const newYear = y !== year;
-  year = y;
+
+// 배경 한 칸 (큰 사진 + 이름 · 소개 · 버튼). PC 연표와 휴대폰 연표가 같이 쓴다.
+function bgBlock(g, n) {
   const cover = g.imgs[0];
-  const side = PERIOD[n].map((w) => {
-    const c = w.imgs.find((i) => i.w / i.h >= 1.2) || w.imgs[0];
-    const vid = w.imgs.some((i) => i.video) ? '<span class="play">▶</span>' : '';
-    return `<li><button class="mini" type="button" data-etc="${w.id}">
-      <span class="mini-img"><img src="${DIR}t/${c.src}.webp" alt="" loading="lazy" decoding="async">${vid}</span>
-      <span class="mini-name">${esc(tr(w, 'title'))}</span><span class="mini-date">${dot(w.date)}</span>
-    </button></li>`;
-  }).join('');
-  html += `<li class="stage snap reveal">
-    <div class="track-bg">
+  return `<div class="track-bg">
       <button class="stage-view" type="button" data-bg="${g.key}" data-cycle="${n}" aria-label="${esc(T().view(g.name))}">
         <img src="${DIR}${cover.src}.webp" alt="${esc(g.name)}" width="${cover.w}" height="${cover.h}" loading="lazy" decoding="async">
       </button>
@@ -125,7 +112,29 @@ BGS.forEach((g, n) => {
           ${g.booth ? `<a class="pxbtn accent" href="${g.booth}" target="_blank" rel="noopener">BOOTH ↗</a>` : ''}
         </div>
       </div>
-    </div>
+    </div>`;
+}
+// 소품 · 셰이더 하나의 작은 그림
+function etcThumb(w) {
+  const c = w.imgs.find((i) => i.w / i.h >= 1.2) || w.imgs[0];
+  const vid = w.imgs.some((i) => i.video) ? '<span class="play">▶</span>' : '';
+  return `<span class="mini-img"><img src="${DIR}t/${c.src}.webp" alt="" loading="lazy" decoding="async">${vid}</span>`;
+}
+
+function renderStages(animate) {
+// PC: 왼쪽 배경 · 가운데 세로줄 · 오른쪽 같은 시기 소품
+let html = '';
+let year = '';
+BGS.forEach((g, n) => {
+  const y = g.date.slice(0, 4);
+  const newYear = y !== year;
+  year = y;
+  const side = PERIOD[n].map((w) => `<li><button class="mini" type="button" data-etc="${w.id}">
+      ${etcThumb(w)}
+      <span class="mini-name">${esc(tr(w, 'title'))}</span><span class="mini-date">${dot(w.date)}</span>
+    </button></li>`).join('');
+  html += `<li class="stage snap reveal">
+    ${bgBlock(g, n)}
     <p class="when">${newYear ? `<b>${y}</b>` : ''}<i aria-hidden="true"></i><span>${T().month(Number(g.date.slice(5, 7)))}</span></p>
     <div class="track-etc">
       ${side ? `<p class="track-label">${T().side}</p><ul class="minis">${side}</ul>` : ''}
@@ -133,11 +142,35 @@ BGS.forEach((g, n) => {
   </li>`;
 });
 $('#stages').innerHTML = html;
+
+// 휴대폰: 배경과 그 밖의 작업을 날짜순으로 한 줄에. 배경은 크게, 소품 · 셰이더는 작게.
+const items = [...BGS.map((g, n) => ({ g, n, date: g.date })), ...ETC.map((w) => ({ w, date: w.date }))]
+  .sort((a, b) => (a.date === b.date ? (a.g ? -1 : 1) : a.date < b.date ? 1 : -1));
+let fy = '';
+$('#feed').innerHTML = items.map((it) => {
+  const y = it.date.slice(0, 4);
+  const yr = y !== fy ? `<b>${y}</b>` : '';
+  fy = y;
+  if (it.g) {
+    return `<li class="feed-item feed-bg reveal">
+      <p class="when">${yr}<i aria-hidden="true"></i><span>${T().month(Number(it.date.slice(5, 7)))}</span></p>
+      ${bgBlock(it.g, it.n)}
+    </li>`;
+  }
+  return `<li class="feed-item feed-etc reveal">
+    ${yr ? `<p class="when">${yr}</p>` : ''}
+    <button class="feed-mini" type="button" data-etc="${it.w.id}">
+      <i class="feed-dot" aria-hidden="true"></i>
+      ${etcThumb(it.w)}
+      <span class="feed-text"><span class="mini-name">${esc(tr(it.w, 'title'))}</span><span class="mini-date">${dot(it.w.date)}</span></span>
+    </button>
+  </li>`;
+}).join('');
+
 cycleTimers.forEach(clearInterval);
 cycleTimers = [];
-document.querySelectorAll('#stages .reveal').forEach((el) => (animate ? revealer.observe(el) : el.classList.add('shown')));
+document.querySelectorAll('#stages .reveal, #feed .reveal').forEach((el) => (animate ? revealer.observe(el) : el.classList.add('shown')));
 document.querySelectorAll('[data-cycle]').forEach(startCycle);
-watchSteps();
 }
 
 // 내려가면 하나씩 도트 디졸브로 나타남
@@ -145,8 +178,7 @@ const revealer = new IntersectionObserver((entries) => {
   for (const e of entries) {
     if (!e.isIntersecting) continue;
     revealer.unobserve(e.target);
-    if (stepOn()) e.target.classList.add('shown'); // 휴대폰은 칸 전체가 페이드로 나타나므로 디졸브는 생략
-    else dissolveIn(e.target);
+    dissolveIn(e.target);
   }
 }, { rootMargin: '0px 0px -12% 0px' });
 
@@ -182,28 +214,9 @@ function startCycle(view) {
 // ---------- 휠 한 번에 한 칸 (큰 화면) ----------
 // CSS scroll-snap 만으로는 휠을 조금 굴리면 제자리로 돌아와서, 휠 방향으로 다음 칸까지 직접 넘긴다.
 // 화면보다 긴 칸(그 밖에)은 그 안에서는 그냥 스크롤되고, 끝에 닿았을 때 다음 칸으로 넘어간다.
-const snapOn = matchMedia('(min-width: 861px) and (min-height: 620px)');
+const snapOn = matchMedia('(min-width: 961px) and (min-height: 620px)'); // portfolio.css 의 PC 연표와 같은 기준
 const HEAD = () => document.querySelector('.site-head').getBoundingClientRect().height;
 let wheelLock = 0;
-
-// ---------- 휴대폰: 넘기면 한 칸씩, 화면 가운데에 온 칸만 계단식으로 나타남 ----------
-// (CSS 의 scroll-snap 이 한 칸씩 멈추게 하고, 여기서 가운데 칸에 .cur 를 붙인다. 모양은 portfolio.css 의 .stepfade)
-function stepOn() { return !snapOn.matches && !still; }
-function pickStep() {
-  if (!stepOn()) return;
-  const mid = innerHeight / 2, band = innerHeight * 0.05;
-  document.querySelectorAll('.snap').forEach((sec) => {
-    const r = sec.getBoundingClientRect();
-    sec.classList.toggle('cur', r.top < mid + band && r.bottom > mid - band);
-  });
-}
-function watchSteps() {
-  document.documentElement.classList.toggle('stepfade', stepOn());
-  pickStep();
-}
-addEventListener('scroll', pickStep, { passive: true });
-addEventListener('resize', pickStep);
-snapOn.addEventListener('change', watchSteps);
 addEventListener('wheel', (e) => {
   if (!snapOn.matches || e.ctrlKey || document.querySelector('dialog[open]')) return;
   const dir = Math.sign(e.deltaY);

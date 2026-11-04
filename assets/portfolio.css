@@ -26,7 +26,7 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html { -webkit-text-size-adjust: 100%; scroll-padding-top: var(--head); }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: var(--head); overflow-x: clip; } /* 옆으로 넘치는 게 없어야 휴대폰에서 100% 아래로 줄어들지 않는다 */
 body {
   margin: 0;
   color: var(--ink);
@@ -42,13 +42,11 @@ body {
 a { color: inherit; }
 :focus-visible { outline: var(--px) solid var(--accent); outline-offset: var(--px); }
 
-/* 섹션 단위로 딱딱 넘어가기. 큰 화면은 휠 한 번에 한 칸(portfolio.js), 휴대폰은 손가락으로 넘기면 한 칸씩 */
-html { scroll-snap-type: y mandatory; }
-.snap { scroll-snap-align: start; min-height: calc(100vh - var(--head)); min-height: calc(100svh - var(--head)); }
-
-/* 휴대폰 (html.stepfade): 가운데에 온 칸만 보이고, 넘기면 계단식으로 사라졌다 나타난다 */
-.stepfade .snap > * { transition: opacity 420ms steps(6), transform 420ms steps(6); }
-.stepfade .snap:not(.cur) > * { opacity: 0; transform: translateY(14px); }
+/* 섹션 단위로 딱딱 넘어가기 (PC 에서만, 휴대폰은 그냥 스크롤) */
+@media (min-width: 961px) and (min-height: 620px) {
+  html { scroll-snap-type: y mandatory; }
+  .snap { scroll-snap-align: start; min-height: calc(100vh - var(--head)); min-height: calc(100svh - var(--head)); }
+}
 
 /* 점 하나 굵기의 테두리 + 깎인 모서리 */
 .pxbtn, .stage-view, .tile-img, .viewer {
@@ -162,6 +160,24 @@ html { scroll-snap-type: y mandatory; }
 .mini-date { display: block; color: var(--mute); font-size: 11px; }
 .play { position: absolute; right: 4px; bottom: 4px; padding: 0 5px; background: var(--ink); color: var(--paper); font-size: 10px; }
 
+/* 휴대폰 연표: 배경 · 소품 · 셰이더를 날짜순으로 한 줄에 (배경은 크게, 나머지는 작게). PC 에서는 숨김 */
+.feed { display: none; --rail: 40px; position: relative; list-style: none; margin: 0; padding: 6px 0 28px var(--rail); }
+.feed::before { content: ""; position: absolute; top: 0; bottom: 0; left: 12px; border-left: var(--px) dashed var(--ink); }
+.feed-item { position: relative; }
+.feed .when { height: auto; text-align: left; display: flex; align-items: center; gap: 8px; }
+.feed .when b { margin: 0; }
+.feed-bg { padding: 26px 0 30px; }
+.feed-bg .when { margin-bottom: 14px; }
+.feed-bg .when i { position: absolute; left: -35px; top: 50%; margin: -7px 0 0; }
+.feed-etc { padding: 7px 0; }
+.feed-etc .when { margin: 16px 0 8px; }
+.feed-mini { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; padding: 0; border: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.feed-mini .mini-img { flex: none; width: 88px; }
+.feed-mini .mini-name { margin-top: 0; }
+.feed-text { min-width: 0; }
+.feed-dot { position: absolute; left: -30px; top: 50%; width: 7px; height: 7px; margin-top: -4px; background: var(--paper); box-shadow: 0 0 0 var(--px) var(--ink); }
+.feed-mini:hover .mini-name { text-decoration: underline; }
+
 /* 마지막: 연락 */
 .outro { display: flex; flex-direction: column; justify-content: center; }
 .contact { padding: 18px 0 0; border-top: var(--px) dashed var(--ink); color: var(--ink-2); }
@@ -195,8 +211,9 @@ html { scroll-snap-type: y mandatory; }
 .v-count { color: var(--mute); font-size: 12px; margin-right: 6px; }
 
 @media (max-width: 960px) {
+  .stages { display: none; }
+  .feed { display: block; }
   .intro { padding-bottom: max(48px, 28svh); } /* 휴대폰: 글이 길어져도 아래로 물결 자리가 남게 */
-  .stage { align-content: center; }
   .nav a { white-space: nowrap; }
   .stages { --etc: 0px; --rail: 40px; padding-left: 40px; }
   .stages::before { right: auto; left: 12px; }
