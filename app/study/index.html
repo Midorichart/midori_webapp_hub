@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko" spellcheck="false">
+<head>
+<script src="../auth.js"></script>
+<meta name="robots" content="noindex, nofollow">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>학습 대시보드</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <header class="dash-head">
+    <div>
+      <a class="hub-link" href="../">midorichart</a>
+      <h1>학습 대시보드</h1>
+      <p id="today"></p>
+    </div>
+    <div class="account" id="account"></div>
+  </header>
+
+  <!-- 계정 연결(config.js)이 있는데 로그인 전이면 과목 대신 보인다 -->
+  <section class="login card" id="login" hidden>
+    <h2>로그인</h2>
+    <p>Task Manager 와 같은 계정으로 로그인하면 PC · 폰 어디서나 같은 학습 데이터를 써요.</p>
+    <form id="login-form" autocomplete="on">
+      <input type="email" name="email" placeholder="이메일" autocomplete="username" required>
+      <input type="password" name="password" placeholder="비밀번호" autocomplete="current-password" required>
+      <button type="submit">로그인</button>
+      <p class="login-error" id="login-error" hidden></p>
+    </form>
+  </section>
+
+  <main class="subjects" id="subjects">
+    <a class="subject card" href="japanese/index.html" data-subject="japanese" style="--c: #3f8f5a">
+      <div class="s-title"><h2>일본어</h2><span class="jp">日本語</span></div>
+      <div class="s-stats" id="stats-japanese"></div>
+      <div class="s-recent" id="recent-japanese"></div>
+      <span class="s-open">열기 ›</span>
+    </a>
+    <a class="subject card" href="english/index.html" data-subject="english" style="--c: #3a5fc4">
+      <div class="s-title"><h2>영어</h2><span>English</span></div>
+      <div class="s-stats" id="stats-english"></div>
+      <div class="s-recent" id="recent-english"></div>
+      <span class="s-open">열기 ›</span>
+    </a>
+    <a class="subject card" href="science/index.html?subject=math" data-subject="math" style="--c: #2c6a8f">
+      <div class="s-title"><h2>수학</h2><span class="jp">数学</span></div>
+      <div class="s-stats" id="stats-math"></div>
+      <div class="s-recent" id="recent-math"></div>
+      <span class="s-open">열기 ›</span>
+    </a>
+    <a class="subject card" href="science/index.html?subject=physics" data-subject="physics" style="--c: #b0632a">
+      <div class="s-title"><h2>물리</h2><span class="jp">物理</span></div>
+      <div class="s-stats" id="stats-physics"></div>
+      <div class="s-recent" id="recent-physics"></div>
+      <span class="s-open">열기 ›</span>
+    </a>
+    <a class="subject card" href="science/index.html?subject=chemistry" data-subject="chemistry" style="--c: #8a4fb0">
+      <div class="s-title"><h2>화학</h2><span class="jp">化学</span></div>
+      <div class="s-stats" id="stats-chemistry"></div>
+      <div class="s-recent" id="recent-chemistry"></div>
+      <span class="s-open">열기 ›</span>
+    </a>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+
+  <input type="file" id="restore-input" accept="application/json,.json" hidden>
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

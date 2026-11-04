@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ko" spellcheck="false">
+<head>
+<script src="../../auth.js"></script>
+<meta name="robots" content="noindex, nofollow">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>みどり 単語帳</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="home-link" href="../index.html" title="학습 대시보드">⌂</a>
+    <div class="brand">みどり<span>単語帳</span></div>
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="vocab">単語</button>
+      <button type="button" role="tab" data-tab="grammar">文法</button>
+      <button type="button" role="tab" data-tab="kanji">常用漢字</button>
+    </nav>
+    <div class="backup">
+      <button type="button" class="ghost" id="export-btn" title="모든 데이터를 JSON 파일로 저장">내보내기</button>
+      <label class="ghost button" title="JSON 백업 파일을 불러와 추가">가져오기<input type="file" id="import-input" accept="application/json,.json" hidden></label>
+    </div>
+  </header>
+
+  <main>
+    <!-- 単語 -->
+    <section class="panel" id="tab-vocab" hidden>
+      <form class="add-row card" id="vocab-form" autocomplete="off">
+        <input name="word" class="jp" placeholder="単語" required>
+        <input name="reading" class="jp" placeholder="読み方">
+        <input name="meaning" placeholder="意味">
+        <button type="submit" class="primary">추가</button>
+      </form>
+
+      <div class="vocab-views">
+        <div class="seg" id="vocab-view" role="group" aria-label="단어 목록">
+          <button type="button" data-view="study">학습 중 <span class="n"></span></button>
+          <button type="button" data-view="done">학습 완료 <span class="n"></span></button>
+        </div>
+        <button type="button" class="test-open" id="test-open">시험지 만들기</button>
+      </div>
+
+      <div class="toolbar">
+        <input type="search" class="search" data-search="vocab" placeholder="검색">
+        <div class="toggles">
+          <button type="button" class="chip" data-hide="reading">読み方 가리기</button>
+          <button type="button" class="chip" data-hide="meaning">意味 가리기</button>
+          <select id="vocab-sort" aria-label="정렬">
+            <option value="new">최신순</option>
+            <option value="old">등록순</option>
+          </select>
+          <select id="vocab-size" aria-label="한 페이지에 보일 단어 수"></select>
+        </div>
+        <span class="count" id="vocab-count"></span>
+      </div>
+
+      <div class="table-wrap card">
+        <table class="vocab-table">
+          <colgroup id="vocab-cols"></colgroup>
+          <thead id="vocab-head"></thead>
+          <tbody id="vocab-body"></tbody>
+        </table>
+        <p class="empty" id="vocab-empty"></p>
+      </div>
+      <nav class="pager" id="vocab-pager" data-pager="vocab" aria-label="단어 페이지" hidden></nav>
+    </section>
+
+    <!-- 文法 -->
+    <section class="panel" id="tab-grammar" hidden>
+      <details class="card add-grammar" id="grammar-add">
+        <summary>+ 문법 추가</summary>
+        <form id="grammar-form" class="grammar-form" autocomplete="off">
+          <label>문법<input name="title" class="jp" placeholder="例) ~について" required></label>
+          <label>例文 <small>한 줄에 하나씩</small><textarea name="examples" class="jp" rows="3"></textarea></label>
+          <label>설명<textarea name="explanation" rows="3"></textarea></label>
+          <div class="form-actions"><button type="submit" class="primary">추가</button></div>
+        </form>
+      </details>
+
+      <div class="toolbar">
+        <input type="search" class="search" data-search="grammar" placeholder="검색">
+        <span class="count" id="grammar-count"></span>
+      </div>
+
+      <div id="grammar-list" class="grammar-list"></div>
+      <p class="empty" id="grammar-empty"></p>
+      <nav class="pager" id="grammar-pager" data-pager="grammar" aria-label="문법 페이지" hidden></nav>
+    </section>
+
+    <!-- 常用漢字 -->
+    <section class="panel" id="tab-kanji" hidden>
+      <div class="kanji-filters card">
+        <input type="search" class="search" id="kanji-search" placeholder="한자 · 읽기 · 뜻 · 번호 검색" autocomplete="off">
+        <div class="seg" id="kanji-level" role="group" aria-label="급수">
+          <button type="button" data-lv="">전체</button>
+          <button type="button" data-lv="N5">N5</button>
+          <button type="button" data-lv="N4">N4</button>
+          <button type="button" data-lv="N3">N3</button>
+          <button type="button" data-lv="N2">N2</button>
+          <button type="button" data-lv="N1">N1</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="toggles">
+          <select id="kanji-known" aria-label="외움·헷갈림 필터">
+            <option value="">전체</option>
+            <option value="none">표시 안 한 한자</option>
+            <option value="known">외운 한자</option>
+            <option value="confused">헷갈리는 한자</option>
+          </select>
+          <button type="button" class="chip" data-khide="reading">音訓 가리기</button>
+          <button type="button" class="chip" data-khide="meaning">意味 가리기</button>
+          <select id="kanji-size" aria-label="한 페이지에 보일 한자 수"></select>
+          <button type="button" class="chip" id="kanji-addlist" title="지금 걸러진 목록 전체의 음독·훈독 단어를 단어장에 추가">목록 단어 → 단어장</button>
+        </div>
+        <span class="count" id="kanji-count"></span>
+      </div>
+
+      <div id="kanji-grid" class="kanji-grid"></div>
+      <p class="empty" id="kanji-empty">한자 데이터를 불러오는 중…</p>
+      <nav class="pager" id="kanji-pager" data-pager="kanji" aria-label="한자 페이지" hidden></nav>
+    </section>
+  </main>
+
+  <div class="modal" id="kanji-modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <article class="modal-card" tabindex="-1" role="dialog" aria-modal="true" aria-label="한자 상세">
+      <header class="kd-bar">
+        <button type="button" class="icon" data-nav="-1" title="이전 (←)">‹</button>
+        <span class="kd-pos" id="kd-pos"></span>
+        <button type="button" class="icon" data-nav="1" title="다음 (→)">›</button>
+        <div class="kd-marks" id="kd-marks"></div>
+        <button type="button" class="icon" data-close title="닫기 (Esc)">×</button>
+      </header>
+      <div class="kd-body" id="kd-body"></div>
+    </article>
+  </div>
+
+  <div class="modal" id="test-modal" hidden>
+    <div class="modal-backdrop" data-tclose></div>
+    <article class="modal-card" tabindex="-1" role="dialog" aria-modal="true" aria-label="시험지">
+      <header class="kd-bar">
+        <strong class="t-title">시험지</strong>
+        <button type="button" class="icon" data-tclose title="닫기 (Esc)">×</button>
+      </header>
+      <div class="kd-body" id="test-body"></div>
+    </article>
+  </div>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="../config.js"></script>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

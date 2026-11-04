@@ -1,6 +1,6 @@
 // Obsidian 의 EJU 진도 체크리스트(md)를 science/data/units-<과목>.json 단원 트리로 바꾼다.
-// 체크리스트를 고친 뒤 허브 폴더에서 `node study/scripts/import-units.mjs` 로 다시 만들면 된다.
-//   node study/scripts/import-units.mjs [체크리스트 폴더]
+// 체크리스트를 고친 뒤 허브 폴더에서 `node app/study/scripts/import-units.mjs` 로 다시 만들면 된다.
+//   node app/study/scripts/import-units.mjs [체크리스트 폴더]
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 

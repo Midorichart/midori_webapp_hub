@@ -258,6 +258,7 @@ async function boot() {
   $('#login').hidden = !!user;
   $('#subjects').hidden = !user;
   if (!user) {
+    if (window.midoriToLogin) return window.midoriToLogin();
     $('#account').innerHTML = '';
     return $('#login-form').email.focus();
   }

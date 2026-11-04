@@ -65,9 +65,12 @@ export async function login(email, password) {
   return currentUser();
 }
 
+let loggingOut = false; // 직접 로그아웃할 때는 캐시를 다 지운 뒤 호출한 쪽이 화면을 옮긴다
+
 export async function logout() {
   const n = pendingCount();
   if (n && !confirm(`아직 계정에 올라가지 않은 변경이 ${n}개 있어요. 그래도 로그아웃할까요?`)) return false;
+  loggingOut = true;
   await sb.auth.signOut();
   await clearCache();
   localStorage.removeItem(OWNER_KEY);
@@ -279,12 +282,14 @@ export function createSync(app) {
   async function start({ login } = {}) {
     if (!configured) return 'local';
     const user = await currentUser();
+    // 툴 모음(/app/)의 로그인 화면이 있으면 그쪽으로, 없으면 login 주소로
+    const toLogin = () => (window.midoriToLogin ? window.midoriToLogin() : login && location.replace(login));
     if (!user) {
-      if (login) location.replace(login);
+      toLogin();
       return 'login';
     }
     sb.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT' && login) location.replace(login);
+      if (event === 'SIGNED_OUT' && !loggingOut) toLogin();
     });
     try {
       await pull();

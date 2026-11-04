@@ -5,153 +5,37 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d0d0c" media="(prefers-color-scheme: dark)">
-<title>midorichart</title>
+<title>Studio Raming · midorichart</title>
+<meta name="description" content="Studio Raming 포트폴리오 · 판매 페이지">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <link rel="stylesheet" href="assets/site.css">
 <style>
   :root { --wrap: 880px; }
-
-  .intro { padding: 56px 0 48px; }
+  body { display: flex; flex-direction: column; }
+  .wrap { flex: 1; width: 100%; }
+  .intro { padding: 96px 0 48px; }
   .intro h1 {
     margin: 0;
-    font-size: clamp(32px, 5.4vw, 52px);
-    line-height: 1.12;
+    font-size: clamp(34px, 6vw, 60px);
+    line-height: 1.1;
     letter-spacing: -0.035em;
     font-weight: 700;
   }
   .intro h1 span { color: var(--mute); }
-  .intro p { margin: 18px 0 0; color: var(--ink-2); font-size: 16px; max-width: 46ch; }
-
-  .section-label {
-    margin: 0 0 14px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--mute);
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .apps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-  .app {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 220px;
-    padding: 22px;
-    text-decoration: none;
-    transition: border-color 160ms ease, transform 160ms ease;
-  }
-  .app:hover { border-color: var(--line-2); transform: translateY(-2px); }
-  .app-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-  .app-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    display: grid;
-    place-items: center;
-    background: var(--surface-2);
-    color: var(--ink);
-  }
-  .app-icon svg { width: 22px; height: 22px; }
-  .app-tag {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--ink-2);
-    border: 1px solid var(--line-2);
-    border-radius: 999px;
-    padding: 3px 10px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .app-tag svg { width: 12px; height: 12px; }
-  .app h2 { margin: 22px 0 6px; font-size: 21px; letter-spacing: -0.025em; }
-  .app p { margin: 0; color: var(--ink-2); font-size: 14.5px; }
-  .app-foot {
-    margin-top: auto;
-    padding-top: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: var(--mute);
-    font-size: 13px;
-  }
-  .app-foot svg { width: 18px; height: 18px; color: var(--ink); transition: transform 160ms ease; }
-  .app:hover .app-foot svg { transform: translateX(3px); }
-
-  @media (max-width: 640px) {
-    .intro { padding: 32px 0 36px; }
-    .apps { grid-template-columns: 1fr; }
-    .app { min-height: 0; }
-  }
+  .intro p { margin: 20px 0 0; color: var(--ink-2); font-size: 16px; max-width: 46ch; }
+  @media (max-width: 640px) { .intro { padding: 56px 0 36px; } }
 </style>
 </head>
 <body>
 <header class="site-head">
   <a class="brand" href="./"><span class="brand-mark"></span>midorichart</a>
-  <span class="head-meta" id="today"></span>
 </header>
 
 <main class="wrap">
   <section class="intro">
     <p class="eyebrow">Studio Raming</p>
-    <h1>매일 쓰는 도구,<br><span>한곳에서 엽니다.</span></h1>
-    <p>일정 관리부터 판매 통계까지, 작업에 필요한 앱을 모아 둔 곳이에요.</p>
-  </section>
-
-  <section>
-    <h2 class="section-label"><span>앱</span><span>3</span></h2>
-    <ul class="apps">
-      <li>
-        <a class="app card" href="tasks/">
-          <div class="app-top">
-            <span class="app-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14.5h3"/></svg>
-            </span>
-          </div>
-          <h2>Task Manager</h2>
-          <p>달력, 주간 시간표, 루틴, 아이디어 보드로 하루와 일주일을 정리해요.</p>
-          <div class="app-foot">
-            <span>일정 · 할 일</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </div>
-        </a>
-      </li>
-      <li>
-        <a class="app card" href="study/">
-          <div class="app-top">
-            <span class="app-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15.5H5.5A1.5 1.5 0 0 1 4 18z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15.5h5.5a1.5 1.5 0 0 0 1.5-1.5z"/><path d="M7 8h1.5M15.5 8H17"/></svg>
-            </span>
-          </div>
-          <h2>학습 대시보드</h2>
-          <p>일본어 · 영어 단어장과 시험지, 수학 · 물리 · 화학 개념과 오답노트를 한곳에서 공부해요.</p>
-          <div class="app-foot">
-            <span>공부 · 단어장</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </div>
-        </a>
-      </li>
-      <li>
-        <a class="app card" href="sales/">
-          <div class="app-top">
-            <span class="app-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M6.5 16v-4M11 16V7M15.5 16v-6M20 16V4.5" /></svg>
-            </span>
-            <span class="app-tag">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-              로그인 필요
-            </span>
-          </div>
-          <h2>Studio Raming 수익</h2>
-          <p>BOOTH 주문을 모아 기간별 매출, 상품별 판매, 최근 주문을 보여줘요.</p>
-          <div class="app-foot">
-            <span>매출 · 통계</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </div>
-        </a>
-      </li>
-    </ul>
+    <h1>포트폴리오와 판매 페이지를<br><span>준비하고 있어요.</span></h1>
+    <p>작업물과 판매 중인 상품을 곧 이곳에서 소개할게요.</p>
   </section>
 </main>
 
@@ -159,10 +43,5 @@
   <span>© 2026 Studio Raming</span>
   <span>midorichart.com</span>
 </footer>
-
-<script>
-  document.getElementById('today').textContent =
-    new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
-</script>
 </body>
 </html>

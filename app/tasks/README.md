@@ -1,10 +1,10 @@
 # Task Manager
 
 서버 코드 없이 브라우저에서 동작하는 개인 캘린더 + 주간 시간표. 데이터는 Supabase(무료)에 저장하거나, 설정이 없으면 브라우저 로컬에 저장됩니다.
-midorichart 허브 저장소의 `tasks/` 폴더에 있고, https://midorichart.com/tasks/ 로 열립니다. (예전 주소 midorichart.github.io/TaskManager 는 이 주소로 넘어옵니다)
+midorichart 허브 저장소의 `app/tasks/` 폴더에 있고, https://midorichart.com/app/tasks/ 로 열립니다. 툴 모음(/app/)에서 로그인해야 열립니다. (예전 주소 midorichart.github.io/TaskManager, midorichart.com/tasks/ 는 이 주소로 넘어옵니다)
 
 ## 파일
-- `index.html` — 앱 전체 (공통 스타일은 허브의 `assets/site.css`)
+- `index.html` — 앱 전체 (공통 스타일은 허브의 `assets/site.css` (`../../assets/site.css`))
 - `config.js` — Supabase URL / anon key 설정
 - `supabase/schema.sql` — Supabase에 만들 테이블
 - `supabase/discord_daily.sql` — 매일 00:00 디스코드 요약
@@ -53,7 +53,7 @@ Publishable(anon) 키는 공개되어도 되는 키입니다. 실제 접근 권�
 
 ## 배포 (무료)
 허브 저장소(`midori_webapp_hub`)를 push 하면 GitHub Pages 로 함께 배포됩니다. 별도 저장소는 필요 없습니다.
-`index.html`, `config.js` 와 허브의 `assets/site.css` 가 함께 있어야 화면이 제대로 나옵니다.
+`index.html`, `config.js` 와 허브의 `assets/site.css` (`../../assets/site.css`) 가 함께 있어야 화면이 제대로 나옵니다.
 
 폰 브라우저에서 접속 후 "홈 화면에 추가"를 하면 앱처럼 씁니다.
 
