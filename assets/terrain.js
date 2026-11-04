@@ -56,8 +56,14 @@ export function mountTerrain(canvas, host) {
     // 지평선 = 소개 글 바로 아래 + 여백. 화면 폭이 바뀌어 글이 길어져도 글과 격자 사이는 늘 같다.
     // 그 아래로 격자가 투명 → 진하게 나타난다.
     const top = Math.min(ch - 40, text.getBoundingClientRect().bottom - hr.top + GAP);
-    const fadeEnd = top + Math.max(FADE_MIN, (ch - top) * 0.4);
-    canvas.style.maskImage = canvas.style.webkitMaskImage = `linear-gradient(to bottom, transparent ${top}px, #000 ${fadeEnd}px)`;
+    const R = ch - top; // 격자가 보이는 높이
+    const fadeEnd = top + Math.min(Math.max(FADE_MIN, R * 0.4), R * 0.5);
+    // 좁은 화면(휴대폰)은 소개 칸 바로 아래로 연표가 이어지므로 아래 끝도 바탕에 녹아들게 한다.
+    // 큰 화면은 소개 칸이 화면 한 장이라 아래 끝 = 화면 끝이어서 그대로 둔다.
+    const tail = cw <= 960 ? Math.min(110, R * 0.35) : 0;
+    canvas.style.maskImage = canvas.style.webkitMaskImage = tail
+      ? `linear-gradient(to bottom, transparent ${top}px, #000 ${fadeEnd}px, #000 ${ch - tail}px, transparent ${ch}px)`
+      : `linear-gradient(to bottom, transparent ${top}px, #000 ${fadeEnd}px)`;
     hy = top / DOT;
     // 격자가 차지하는 높이 R 을 기준으로 원근을 잡는다 (예전엔 지평선이 높이의 42% 였으니 R = 0.58 H 와 같은 값)
     const He = (H - hy) / 0.58;

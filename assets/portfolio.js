@@ -1,5 +1,5 @@
 // 메인 페이지: 배경 연표(큰 화면에선 한 칸씩 딱딱 넘어가고, 도트 디졸브로 나타남 · 사진도 디졸브로 넘어감), 사진 크게 보기, KO · JA · EN 전환
-import { mountTerrain } from './terrain.js?v=a01f9339';
+import { mountTerrain } from './terrain.js?v=8f48fb3b';
 
 const BGS = window.BACKGROUNDS || [];
 const ETC = window.ETC || [];

@@ -13,16 +13,7 @@
   --head: 58px;
   --font: "Galmuri11", "Galmuri9", "DungGeunMo", monospace;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --paper: #0f2329; --paper-2: #17323a; --sky: #1d3d46; --ink: #d6eff3; --ink-2: #a5c4ca; --mute: #6f8f95; --accent: #5ccfe0; --accent-ink: #0d2228;
-  }
-}
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --paper: #0f2329; --paper-2: #17323a; --sky: #1d3d46; --ink: #d6eff3; --ink-2: #a5c4ca; --mute: #6f8f95; --accent: #5ccfe0; --accent-ink: #0d2228;
-}
+/* 다크 모드 없음: 기기 설정과 상관없이 늘 이 밝은 색 */
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -213,7 +204,7 @@ a { color: inherit; }
 @media (max-width: 960px) {
   .stages { display: none; }
   .feed { display: block; }
-  .intro { padding-bottom: max(48px, 28svh); } /* 휴대폰: 글이 길어져도 아래로 물결 자리가 남게 */
+  .intro { padding-bottom: max(48px, 38svh); } /* 휴대폰: 글이 길어져도 아래로 물결 자리가 남게 (위아래가 서서히 사라지므로 넉넉히) */
   .nav a { white-space: nowrap; }
   .stages { --etc: 0px; --rail: 40px; padding-left: 40px; }
   .stages::before { right: auto; left: 12px; }
@@ -225,8 +216,13 @@ a { color: inherit; }
   .stage-actions { flex-direction: row; flex-wrap: wrap; }
   .minis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-@media (max-width: 360px) {
-  .brand { font-size: 0; gap: 0; } /* 아주 좁으면 로고만 */
+@media (max-width: 560px) {
+  /* 휴대폰: 로고 글자는 빼고 그림만 (영어 메뉴 Timeline · Contact 가 길어도 한 줄에 들어가게) */
+  .brand { font-size: 0; gap: 0; }
+}
+@media (max-width: 340px) {
+  .site-head { padding: 0 12px; }
+  .nav a { padding: 2px 3px; }
 }
 @media (max-width: 560px) {
   .intro-logo { width: 96px; }
