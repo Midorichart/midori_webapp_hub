@@ -36,25 +36,37 @@ const COLORS = ['#e6f5f8', '#d9f0f4', '#cbeaf0', '#bde4ec', '#acdde7', '#99d5e1'
 export function mountTerrain(canvas, host) {
   const ctx = canvas.getContext('2d');
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const Z = 6, Z0 = 1.2, DOT = 2; // DOT: 화면 px 2개 = 캔버스 점 1개
+  const Z = 6, Z0 = 1.2;
+  let DOT = 2; // 화면 px 몇 개 = 캔버스 점 1개 (큰 화면 2, 좁은 화면 1: 휴대폰에서 너무 뭉개 보이지 않게)
+  const GAP = 30, FADE_MIN = 90; // 소개 글(버튼 · 연표)과 격자가 시작되는 곳 사이 여백, 격자가 서서히 진해지는 구간 (화면 px)
+  const text = host.querySelector('.intro-text');
   const ALPHAS = 10; // 투명도 단계 (선을 묶어 긋기 위해)
   let W = 0, H = 0, f = 1, hy = 0, camH = 1, cx = 0, COLS = COLS_MAX, conv = 0;
   let lastT = 0;
 
   function layout() {
     // 너비는 화면 끝까지 (본문 폭이 아니라), 높이는 소개 칸만큼
-    const cw = document.documentElement.clientWidth, ch = host.getBoundingClientRect().height;
+    const hr = host.getBoundingClientRect();
+    const cw = document.documentElement.clientWidth, ch = hr.height;
+    DOT = cw <= 960 ? 1 : 2;
     W = Math.max(2, Math.round(cw / DOT));
     H = Math.max(2, Math.round(ch / DOT));
     canvas.width = W; canvas.height = H;
     canvas.style.width = cw + 'px'; canvas.style.height = ch + 'px';
+    // 지평선 = 소개 글 바로 아래 + 여백. 화면 폭이 바뀌어 글이 길어져도 글과 격자 사이는 늘 같다.
+    // 그 아래로 격자가 투명 → 진하게 나타난다.
+    const top = Math.min(ch - 40, text.getBoundingClientRect().bottom - hr.top + GAP);
+    const fadeEnd = top + Math.max(FADE_MIN, (ch - top) * 0.4);
+    canvas.style.maskImage = canvas.style.webkitMaskImage = `linear-gradient(to bottom, transparent ${top}px, #000 ${fadeEnd}px)`;
+    hy = top / DOT;
+    // 격자가 차지하는 높이 R 을 기준으로 원근을 잡는다 (예전엔 지평선이 높이의 42% 였으니 R = 0.58 H 와 같은 값)
+    const He = (H - hy) / 0.58;
     // 넓은 화면: 줄마다 화면 너비를 꽉 채운다 (세로선이 나란히).
     // 좁고 긴 화면(휴대폰): 그렇게 하면 세로 줄무늬처럼 보여서, 진짜 바닥처럼 세로선이 지평선 쪽으로 모이게 한다 (conv → 1).
-    f = Math.max(W, H * 1.8) * 0.42;
-    conv = Math.max(0, Math.min(1, (1.2 - W / H) / 0.6));
-    const flatCols = Math.max(14, Math.min(COLS_MAX, Math.round(COLS_MAX * W / (H * 1.8))));
+    f = Math.max(W, He * 1.8) * 0.42;
+    conv = Math.max(0, Math.min(1, (1.2 - W / He) / 0.6));
+    const flatCols = Math.max(14, Math.min(COLS_MAX, Math.round(COLS_MAX * W / (He * 1.8))));
     COLS = Math.round(flatCols + (COLS_MAX - flatCols) * conv);
-    hy = H * 0.42;
     camH = (H * 1.02 - hy) * Z0 / f;
     cx = W / 2;
   }
@@ -204,7 +216,9 @@ export function mountTerrain(canvas, host) {
 
   layout();
   canvas.drawAt = draw; // 특정 시점 장면을 바로 그려 볼 때 (확인용)
-  new ResizeObserver(() => { layout(); if (still) draw(3); }).observe(host);
+  const ro = new ResizeObserver(() => { layout(); if (still) draw(3); });
+  ro.observe(host);
+  ro.observe(text); // 글꼴이 늦게 오거나 언어를 바꿔 글 높이가 달라질 때
 
   if (still) { draw(3); return; } // 움직임 줄이기: 한 장면만
 

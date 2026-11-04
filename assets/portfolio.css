@@ -42,11 +42,13 @@ body {
 a { color: inherit; }
 :focus-visible { outline: var(--px) solid var(--accent); outline-offset: var(--px); }
 
-/* 섹션 단위로 딱딱 넘어가기 (큰 화면에서만, 작은 화면은 그냥 스크롤) */
-@media (min-width: 861px) and (min-height: 620px) {
-  html { scroll-snap-type: y mandatory; }
-  .snap { scroll-snap-align: start; min-height: calc(100vh - var(--head)); min-height: calc(100svh - var(--head)); }
-}
+/* 섹션 단위로 딱딱 넘어가기. 큰 화면은 휠 한 번에 한 칸(portfolio.js), 휴대폰은 손가락으로 넘기면 한 칸씩 */
+html { scroll-snap-type: y mandatory; }
+.snap { scroll-snap-align: start; min-height: calc(100vh - var(--head)); min-height: calc(100svh - var(--head)); }
+
+/* 휴대폰 (html.stepfade): 가운데에 온 칸만 보이고, 넘기면 계단식으로 사라졌다 나타난다 */
+.stepfade .snap > * { transition: opacity 420ms steps(6), transform 420ms steps(6); }
+.stepfade .snap:not(.cur) > * { opacity: 0; transform: translateY(14px); }
 
 /* 점 하나 굵기의 테두리 + 깎인 모서리 */
 .pxbtn, .stage-view, .tile-img, .viewer {
@@ -85,8 +87,9 @@ a { color: inherit; }
 .terrain {
   position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 100vw; height: 100%; display: block; image-rendering: pixelated; z-index: 0;
   /* 지평선 쪽(위)은 바탕에 녹아들게: 글자 뒤로 먼 격자선이 뭉쳐 보이지 않도록 */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 44%, #000 74%);
-  mask-image: linear-gradient(to bottom, transparent 44%, #000 74%);
+  /* 실제 위치는 terrain.js 가 소개 글 아래 + 여백으로 다시 정한다 (글과 격자 사이가 늘 같게) */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 60%, #000 85%);
+  mask-image: linear-gradient(to bottom, transparent 60%, #000 85%);
 }
 .intro-text { position: relative; z-index: 1; max-width: 100%; }
 .intro-top { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
@@ -192,8 +195,9 @@ a { color: inherit; }
 .v-count { color: var(--mute); font-size: 12px; margin-right: 6px; }
 
 @media (max-width: 960px) {
-  .intro { min-height: 82svh; } /* 휴대폰: 글자 아래로 물결이 보이게 */
-  .terrain { -webkit-mask-image: linear-gradient(to bottom, transparent 62%, #000 86%); mask-image: linear-gradient(to bottom, transparent 62%, #000 86%); }
+  .intro { padding-bottom: max(48px, 28svh); } /* 휴대폰: 글이 길어져도 아래로 물결 자리가 남게 */
+  .stage { align-content: center; }
+  .nav a { white-space: nowrap; }
   .stages { --etc: 0px; --rail: 40px; padding-left: 40px; }
   .stages::before { right: auto; left: 12px; }
   .stage { grid-template-columns: 1fr; gap: 16px; padding: 30px 0; }
@@ -203,6 +207,9 @@ a { color: inherit; }
   .stage-info { grid-template-columns: 1fr; }
   .stage-actions { flex-direction: row; flex-wrap: wrap; }
   .minis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 360px) {
+  .brand { font-size: 0; gap: 0; } /* 아주 좁으면 로고만 */
 }
 @media (max-width: 560px) {
   .intro-logo { width: 96px; }

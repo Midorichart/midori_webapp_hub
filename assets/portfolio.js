@@ -1,5 +1,5 @@
 // 메인 페이지: 배경 연표(큰 화면에선 한 칸씩 딱딱 넘어가고, 도트 디졸브로 나타남 · 사진도 디졸브로 넘어감), 사진 크게 보기, KO · JA · EN 전환
-import { mountTerrain } from './terrain.js?v=191e18e6';
+import { mountTerrain } from './terrain.js?v=a01f9339';
 
 const BGS = window.BACKGROUNDS || [];
 const ETC = window.ETC || [];
@@ -137,6 +137,7 @@ cycleTimers.forEach(clearInterval);
 cycleTimers = [];
 document.querySelectorAll('#stages .reveal').forEach((el) => (animate ? revealer.observe(el) : el.classList.add('shown')));
 document.querySelectorAll('[data-cycle]').forEach(startCycle);
+watchSteps();
 }
 
 // 내려가면 하나씩 도트 디졸브로 나타남
@@ -144,7 +145,8 @@ const revealer = new IntersectionObserver((entries) => {
   for (const e of entries) {
     if (!e.isIntersecting) continue;
     revealer.unobserve(e.target);
-    dissolveIn(e.target);
+    if (stepOn()) e.target.classList.add('shown'); // 휴대폰은 칸 전체가 페이드로 나타나므로 디졸브는 생략
+    else dissolveIn(e.target);
   }
 }, { rootMargin: '0px 0px -12% 0px' });
 
@@ -183,6 +185,25 @@ function startCycle(view) {
 const snapOn = matchMedia('(min-width: 861px) and (min-height: 620px)');
 const HEAD = () => document.querySelector('.site-head').getBoundingClientRect().height;
 let wheelLock = 0;
+
+// ---------- 휴대폰: 넘기면 한 칸씩, 화면 가운데에 온 칸만 계단식으로 나타남 ----------
+// (CSS 의 scroll-snap 이 한 칸씩 멈추게 하고, 여기서 가운데 칸에 .cur 를 붙인다. 모양은 portfolio.css 의 .stepfade)
+function stepOn() { return !snapOn.matches && !still; }
+function pickStep() {
+  if (!stepOn()) return;
+  const mid = innerHeight / 2, band = innerHeight * 0.05;
+  document.querySelectorAll('.snap').forEach((sec) => {
+    const r = sec.getBoundingClientRect();
+    sec.classList.toggle('cur', r.top < mid + band && r.bottom > mid - band);
+  });
+}
+function watchSteps() {
+  document.documentElement.classList.toggle('stepfade', stepOn());
+  pickStep();
+}
+addEventListener('scroll', pickStep, { passive: true });
+addEventListener('resize', pickStep);
+snapOn.addEventListener('change', watchSteps);
 addEventListener('wheel', (e) => {
   if (!snapOn.matches || e.ctrlKey || document.querySelector('dialog[open]')) return;
   const dir = Math.sign(e.deltaY);
