@@ -27,9 +27,5 @@
 - 오답노트 · 개념 이미지는 Storage 버킷 `study-images` 의 `<user id>/<과목>/<이미지 id>` 에 올라가고, 이 기기에 없으면 받아 옵니다.
 - 로그인 전에 이 브라우저에 저장해 둔 데이터가 있으면 처음 로그인할 때 계정에 합칠지 묻습니다. 로그아웃하면 이 브라우저의 학습 데이터 사본은 지웁니다.
 
-## PC 앱 데이터 옮기기
-예전 PC 앱(Electron 학습 대시보드)의 데이터는 `midori_StudyApp/backup/midori-study-all-2026-11-04.json` 으로 뽑아 두었습니다.
-여기 대시보드의 **백업 가져오기** 로 넣으면 계정에 올라갑니다. (그 PC 앱은 이제 midorichart.com 을 여는 데스크톱 앱으로 바뀌었습니다.)
-
 ## 로컬에서 보기
 허브 폴더에서 `python -m http.server` 후 http://localhost:8000/study/ (ES 모듈이라 파일을 바로 열면 안 됩니다).
