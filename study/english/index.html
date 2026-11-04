@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko" spellcheck="false">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>みどり English</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="home-link" href="../index.html" title="학습 대시보드">⌂</a>
+    <div class="brand">みどり<span>English</span></div>
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="vocab">Words</button>
+      <button type="button" role="tab" data-tab="reading">Reading</button>
+      <button type="button" role="tab" data-tab="listening">Listening</button>
+      <button type="button" role="tab" data-tab="writing">Writing</button>
+      <button type="button" role="tab" data-tab="speaking">Speaking</button>
+    </nav>
+    <div class="backup">
+      <button type="button" class="ghost" id="export-btn" title="모든 데이터를 JSON 파일로 저장">내보내기</button>
+      <label class="ghost button" title="JSON 백업 파일을 불러와 추가">가져오기<input type="file" id="import-input" accept="application/json,.json" hidden></label>
+    </div>
+  </header>
+
+  <main>
+    <!-- 단어 -->
+    <section class="panel" id="tab-vocab" hidden>
+      <form class="add-row card" id="vocab-form" autocomplete="off">
+        <input name="word" class="en" placeholder="단어" required>
+        <input name="meaning" placeholder="뜻">
+        <input name="example" class="en wide" placeholder="예문 (선택)">
+        <button type="submit" class="primary">추가</button>
+      </form>
+
+      <div class="vocab-views">
+        <div class="seg" id="vocab-view" role="group" aria-label="단어 목록">
+          <button type="button" data-view="study">학습 중 <span class="n"></span></button>
+          <button type="button" data-view="done">학습 완료 <span class="n"></span></button>
+        </div>
+        <button type="button" class="test-open" id="test-open">시험지 만들기</button>
+      </div>
+
+      <div class="toolbar">
+        <input type="search" class="search" data-search="vocab" placeholder="검색">
+        <div class="toggles">
+          <button type="button" class="chip" data-hide="word">단어 가리기</button>
+          <button type="button" class="chip" data-hide="meaning">뜻 가리기</button>
+          <button type="button" class="chip" data-hide="example">예문 가리기</button>
+          <select id="vocab-sort" aria-label="정렬">
+            <option value="new">최신순</option>
+            <option value="old">등록순</option>
+            <option value="abc">알파벳순</option>
+          </select>
+          <select id="vocab-size" aria-label="한 페이지에 보일 단어 수"></select>
+        </div>
+        <span class="count" id="vocab-count"></span>
+      </div>
+
+      <div class="table-wrap card">
+        <!-- 단어마다 <tbody> 하나: 윗줄 단어·뜻, 아랫줄 예문 -->
+        <table class="vocab-table en-vocab" id="vocab-table">
+          <colgroup id="vocab-cols"></colgroup>
+          <thead id="vocab-head"></thead>
+        </table>
+        <p class="empty" id="vocab-empty"></p>
+      </div>
+      <nav class="pager" id="vocab-pager" data-pager="vocab" aria-label="단어 페이지" hidden></nav>
+    </section>
+
+    <!-- 아직 내용을 정하지 않은 탭 -->
+    <section class="panel" id="tab-reading" hidden><div class="card soon"><h2>Reading</h2><p>무엇을 할지 정해지면 채울게요.</p></div></section>
+    <section class="panel" id="tab-listening" hidden><div class="card soon"><h2>Listening</h2><p>무엇을 할지 정해지면 채울게요.</p></div></section>
+
+    <!-- 라이팅 · 스피킹: 풀이 노트 | 템플릿 | 따라적기 (내용은 js 가 채운다) -->
+    <section class="panel practice" id="tab-writing" hidden></section>
+    <section class="panel practice" id="tab-speaking" hidden></section>
+  </main>
+
+  <div class="modal" id="test-modal" hidden>
+    <div class="modal-backdrop" data-tclose></div>
+    <article class="modal-card" tabindex="-1" role="dialog" aria-modal="true" aria-label="시험지">
+      <header class="kd-bar">
+        <strong class="t-title">시험지</strong>
+        <button type="button" class="icon" data-tclose title="닫기 (Esc)">×</button>
+      </header>
+      <div class="kd-body" id="test-body"></div>
+    </article>
+  </div>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="../config.js"></script>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
