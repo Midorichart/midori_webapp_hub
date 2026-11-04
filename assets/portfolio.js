@@ -3,7 +3,7 @@ import { mountTerrain } from './terrain.js?v=8f48fb3b';
 
 const BGS = window.BACKGROUNDS || [];
 const ETC = window.ETC || [];
-const DIR = 'assets/portfolio/';
+const DIR = new URL('portfolio/', import.meta.url).href; // 언어별 페이지(/ja/ 등)에서도 같은 사진 폴더
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const dot = (d) => d.replace(/-/g, '.');
@@ -40,7 +40,9 @@ const UI = {
   },
 };
 const LANGS = Object.keys(UI);
+// 언어: 페이지 주소(/ko/ · /ja/ · /en/ — scripts/langs.py 가 PAGE_LANG 을 넣음) → 고른 언어 → 브라우저 언어
 let lang = (() => {
+  if (LANGS.includes(window.PAGE_LANG)) return window.PAGE_LANG;
   try { const saved = localStorage.getItem('lang'); if (LANGS.includes(saved)) return saved; } catch {}
   const nav = (navigator.language || 'ko').slice(0, 2);
   return nav === 'ja' ? 'ja' : nav === 'ko' ? 'ko' : 'en';
@@ -314,13 +316,11 @@ function applyStatic() {
   $('#reach').innerHTML = T().reach(mail, dm);
   document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
 }
+// 언어 버튼: 고른 언어를 기억하고 그 언어 페이지(/ko/ · /ja/ · /en/)로 옮긴다
 function setLang(next) {
+  try { localStorage.setItem('lang', next); } catch {}
   if (next === lang) return;
-  lang = next;
-  try { localStorage.setItem('lang', lang); } catch {}
-  applyStatic();
-  renderStages(false);
-  if (dlg.open) dlg.close();
+  location.href = new URL(`../${next}/`, import.meta.url).href;
 }
 document.querySelectorAll('[data-lang]').forEach((b) => { b.onclick = () => setLang(b.dataset.lang); });
 applyStatic();

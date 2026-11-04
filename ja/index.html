@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!-- 자동 생성: 고치지 말고 /index.html 을 고친 뒤 python scripts/langs.py (커밋할 때 자동) -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef8fa">
+<meta name="color-scheme" content="light only">
+<title>MIDORI CHART (緑チャート)</title>
+<meta name="description" content="Studio Raming所属 | 背景・小物モデラー MIDORI CHART(緑チャート)の作品ポートフォリオ">
+<meta property="og:title" content="MIDORI CHART (緑チャート)">
+<meta property="og:description" content="Studio Raming所属 | 背景・小物モデラー MIDORI CHART(緑チャート)の作品ポートフォリオ">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:url" content="https://midorichart.com/ja/">
+<link rel="canonical" href="https://midorichart.com/ja/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://midorichart.com/assets/portfolio/x-2105931502844588543-4.webp">
+<link rel="alternate" hreflang="ko" href="https://midorichart.com/ko/">
+<link rel="alternate" hreflang="ja" href="https://midorichart.com/ja/">
+<link rel="alternate" hreflang="en" href="https://midorichart.com/en/">
+<link rel="alternate" hreflang="x-default" href="https://midorichart.com/">
+<script>window.PAGE_LANG = 'ja';</script>
+<link rel="icon" href="../assets/favicon.png" type="image/png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.min.css">
+<link rel="stylesheet" href="../assets/portfolio.css?v=660e43e1">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<header class="site-head">
+  <a class="brand" href="./"><img src="../assets/logo.png" alt="" width="237" height="173">midorichart</a>
+  <nav class="nav" aria-label="섹션">
+    <a href="#backgrounds" data-t="timeline">年表</a>
+    <a href="#contact" data-t="contact">連絡</a>
+    <span class="langs" role="group" aria-label="Language">
+      <button type="button" data-lang="ko">KO</button><button type="button" data-lang="ja">JA</button><button type="button" data-lang="en">EN</button>
+    </span>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section class="intro snap">
+    <canvas id="terrain" class="terrain" aria-hidden="true"></canvas>
+    <div class="intro-text">
+    <div class="intro-top">
+      <img class="intro-logo" src="../assets/logo.png" alt="緑 로고" width="237" height="173">
+      <h1 class="logo">MIDORI<span>緑チャート</span></h1>
+    </div>
+    <p><span data-t="intro1">WARUDOの背景や小物を作っています。</span><br><span data-t="intro2">Studio Raming 所属 · 3D Environment &amp; Props</span></p>
+    <p class="links">
+      <a class="pxbtn accent" href="https://raming.booth.pm/" target="_blank" rel="noopener">BOOTH</a>
+      <a class="pxbtn" href="https://studioraming.com/" target="_blank" rel="noopener">studioraming.com</a>
+      <a class="pxbtn" href="https://x.com/midorichart" target="_blank" rel="noopener">X @midorichart</a>
+    </p>
+    <a class="scroll-cue" href="#backgrounds" data-t="cue">▼ 年表</a>
+    </div>
+  </section>
+
+  <section id="backgrounds" aria-label="연표: 왼쪽은 배경, 오른쪽은 같은 시기의 소품 · 셰이더">
+    <ol class="stages" id="stages"></ol>
+    <ol class="feed" id="feed"></ol>
+  </section>
+
+  <section id="contact" class="outro snap">
+    <div class="contact">
+      <p id="reach">일 얘기는 <a href="mailto:midorichart@gmail.com">midorichart@gmail.com</a> 이나 <a href="https://x.com/midorichart" target="_blank" rel="noopener">X DM</a> 으로 주세요.</p>
+      <p class="links">
+        <a class="pxbtn accent" href="https://raming.booth.pm/" target="_blank" rel="noopener">BOOTH</a>
+        <a class="pxbtn" href="https://studioraming.com/" target="_blank" rel="noopener">studioraming.com</a>
+        <a class="pxbtn" href="https://x.com/midorichart" target="_blank" rel="noopener">X @midorichart</a>
+      </p>
+    </div>
+    <footer class="site-foot">© 2026 MIDORI · Studio Raming</footer>
+  </section>
+</main>
+
+<dialog class="viewer" id="viewer" aria-label="사진 보기">
+  <div class="v-stage">
+    <button class="v-nav prev" type="button" data-step="-1" aria-label="이전">◀</button>
+    <figure class="v-figure">
+      <img id="v-img" alt="">
+      <a class="v-play pxbtn" id="v-play" target="_blank" rel="noopener" hidden data-t="play">▶ Xで動画を見る</a>
+    </figure>
+    <button class="v-nav next" type="button" data-step="1" aria-label="다음">▶</button>
+  </div>
+  <div class="v-strip" id="v-strip"></div>
+  <div class="v-info">
+    <div>
+      <p class="v-date" id="v-date"></p>
+      <h3 id="v-title"></h3>
+      <p class="v-desc" id="v-desc"></p>
+    </div>
+    <div class="v-actions">
+      <span class="v-count" id="v-count"></span>
+      <a class="pxbtn accent" id="v-buy" target="_blank" rel="noopener" hidden>BOOTH</a>
+      <a class="pxbtn" id="v-x" target="_blank" rel="noopener" hidden>X</a>
+      <button class="pxbtn" type="button" id="v-close" data-t="close">閉じる</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="../assets/portfolio/works.js?v=2380124b"></script>
+<script type="module" src="../assets/portfolio.js?v=b3768bd5"></script>
+</body>
+</html>

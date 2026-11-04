@@ -5,11 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#eef8fa">
 <meta name="color-scheme" content="light only">
-<title>MIDORI 緑チャート</title>
-<meta name="description" content="WARUDO 배경이랑 소품 만드는 MIDORI(緑チャート). Studio Raming.">
-<meta property="og:title" content="MIDORI 緑チャート">
-<meta property="og:description" content="WARUDO 배경이랑 소품 만들어요. Studio Raming.">
+<!-- 언어별 페이지(/ko/ · /ja/ · /en/)는 이 파일로 scripts/langs.py 가 만든다 (커밋할 때 자동). 이 파일만 고치면 된다. -->
+<!-- lang-meta -->
+<title>MIDORI CHART (緑チャート)</title>
+<meta name="description" content="Studio Raming 소속 | 배경 · 소품 모델러 MIDORI CHART(緑チャート) 작업 포트폴리오">
+<meta property="og:title" content="MIDORI CHART (緑チャート)">
+<meta property="og:description" content="Studio Raming 소속 | 배경 · 소품 모델러 MIDORI CHART(緑チャート) 작업 포트폴리오">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:url" content="https://midorichart.com/">
+<link rel="canonical" href="https://midorichart.com/">
+<!-- /lang-meta -->
+<meta property="og:type" content="website">
 <meta property="og:image" content="https://midorichart.com/assets/portfolio/x-2105931502844588543-4.webp">
+<link rel="alternate" hreflang="ko" href="https://midorichart.com/ko/">
+<link rel="alternate" hreflang="ja" href="https://midorichart.com/ja/">
+<link rel="alternate" hreflang="en" href="https://midorichart.com/en/">
+<link rel="alternate" hreflang="x-default" href="https://midorichart.com/">
+<!-- lang-redirect: midorichart.com 으로 들어오면 고른 언어 → 브라우저 언어 순으로 /ko/ · /ja/ · /en/ 로 보낸다 -->
+<script>
+(function () {
+  var L = ['ko', 'ja', 'en'], s = null;
+  try { s = localStorage.getItem('lang'); } catch (e) {}
+  var n = (navigator.language || '').slice(0, 2);
+  var l = L.indexOf(s) >= 0 ? s : n === 'ja' ? 'ja' : n === 'ko' ? 'ko' : 'en';
+  location.replace(l + '/' + location.hash);
+})();
+</script>
+<!-- /lang-redirect -->
 <link rel="icon" href="assets/favicon.png" type="image/png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.min.css">
@@ -90,6 +112,6 @@
 </dialog>
 
 <script src="assets/portfolio/works.js?v=2380124b"></script>
-<script type="module" src="assets/portfolio.js?v=b4ef4f39"></script>
+<script type="module" src="assets/portfolio.js?v=b3768bd5"></script>
 </body>
 </html>

@@ -1,0 +1,5 @@
+# 검색 로봇 안내. /app/ 아래 툴 페이지는 각 페이지의 noindex 로 검색에서 빠진다.
+User-agent: *
+Allow: /
+
+Sitemap: https://midorichart.com/sitemap.xml
