@@ -23,7 +23,7 @@
 <link rel="icon" href="../assets/favicon.png" type="image/png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.min.css">
-<link rel="stylesheet" href="../assets/portfolio.css?v=660e43e1">
+<link rel="stylesheet" href="../assets/portfolio.css?v=180eccd5">
 <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
@@ -54,6 +54,22 @@
     </p>
     <a class="scroll-cue" href="#backgrounds" data-t="cue">▼ 연표</a>
     </div>
+    <!-- 메시지 창: PC 는 소개 오른쪽, 휴대폰은 맨 아래 연락 칸으로 옮겨진다 (portfolio.js). 받은 메시지는 /app/inbox/ -->
+    <aside class="msgbox" id="msgbox" aria-label="메시지 보내기">
+      <div class="mb-bar"><span class="mb-dots" aria-hidden="true"><i></i><i></i><i></i></span><b data-t="mbTitle">MESSAGE</b><span data-t="mbTo">→ MIDORI</span></div>
+      <div class="mb-log" id="mb-log" aria-live="polite">
+        <p class="mb-bubble them" data-t="mbHello">궁금한 점이나 작업 의뢰, 편하게 남겨 주세요!</p>
+      </div>
+      <form class="mb-form" id="mb-form" autocomplete="off">
+        <div class="mb-who">
+          <input id="mb-name" maxlength="40" data-ph="mbName" placeholder="이름">
+          <label class="mb-anon"><input type="checkbox" id="mb-anon"><span data-t="mbAnon">익명으로</span></label>
+        </div>
+        <textarea id="mb-body" maxlength="2000" rows="3" required data-ph="mbBody" placeholder="메시지 (답장이 필요하면 메일이나 X 아이디도 함께)"></textarea>
+        <input class="mb-hp" id="mb-hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div class="mb-send"><small id="mb-status"></small><button class="pxbtn accent" type="submit" data-t="mbSend">보내기 ▶</button></div>
+      </form>
+    </aside>
   </section>
 
   <section id="backgrounds" aria-label="연표: 왼쪽은 배경, 오른쪽은 같은 시기의 소품 · 셰이더">
@@ -100,6 +116,6 @@
 </dialog>
 
 <script src="../assets/portfolio/works.js?v=2380124b"></script>
-<script type="module" src="../assets/portfolio.js?v=b3768bd5"></script>
+<script type="module" src="../assets/portfolio.js?v=96decaa1"></script>
 </body>
 </html>

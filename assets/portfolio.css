@@ -40,7 +40,7 @@ a { color: inherit; }
 }
 
 /* 점 하나 굵기의 테두리 + 깎인 모서리 */
-.pxbtn, .stage-view, .tile-img, .viewer {
+.pxbtn, .stage-view, .soon-view, .tile-img, .viewer {
   box-shadow:
     0 calc(-1 * var(--px)) 0 0 var(--ink),
     0 var(--px) 0 0 var(--ink),
@@ -107,7 +107,7 @@ a { color: inherit; }
 .sec-title small { font-size: 12px; color: var(--mute); }
 
 /* ---------- 연표: 왼쪽 배경 · 가운데 세로줄 · 오른쪽 같은 시기 소품 ---------- */
-.stages { --etc: 320px; --rail: 84px; position: relative; list-style: none; margin: 0; padding: 0; }
+.stages { --etc: 320px; --rail: 150px; /* 가운데 세로줄 칸: 시계 · 톱니가 양옆 내용을 가리지 않을 만큼 */ position: relative; list-style: none; margin: 0; padding: 0; }
 .stages::before { content: ""; position: absolute; top: 0; bottom: 0; right: calc(var(--etc) + var(--rail) / 2); border-left: var(--px) dashed var(--ink); }
 .stage { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) var(--rail) var(--etc); align-items: center; padding: 28px 0; }
 .js .reveal:not(.shown) { visibility: hidden; }
@@ -139,35 +139,110 @@ a { color: inherit; }
 .when b { display: inline-block; margin-bottom: 10px; padding: 1px 8px; background: var(--ink); color: var(--paper); font-weight: 400; font-size: 16px; }
 .when span { display: inline-block; padding: 0 4px; background: var(--paper); }
 
+/* 세로줄을 타고 내려오는 도트 시계 (PC 연표). 위치 · 날짜 · 바늘은 portfolio.js 가 스크롤에 맞춰 바꾼다 */
+#backgrounds { position: relative; }
+.rail-clock { position: absolute; left: 0; top: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 5px; transform: translate(-50%, -50%); pointer-events: none; opacity: 0; transition: opacity 240ms steps(4); }
+.rail-clock.on { opacity: 1; }
+.rail-clock canvas { display: block; width: 99px; height: 63px; image-rendering: pixelated; }
+.rail-clock span { padding: 1px 7px; background: var(--ink); color: var(--paper); font-size: 13px; white-space: nowrap; }
+
 /* 오른쪽: 이 무렵 만든 소품 · 셰이더 */
 .track-etc { align-self: start; }
 .track-label { margin: 0 0 10px; color: var(--mute); font-size: 12px; }
-.minis { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; }
-.mini { display: block; width: 100%; padding: 0; border: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+/* 맨 위 「다음 배경 준비 중」: 빈 사진 틀에 노란 테이프 (drawSoon 이 도트로 그림) */
+.soon-view { position: relative; display: block; width: calc(100% - 2 * var(--px)); margin: var(--px); aspect-ratio: 16 / 9; max-height: 52vh; overflow: hidden; background: var(--paper-2); }
+.soon-view canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.stage-soon .stage-info { grid-template-columns: minmax(0, 1fr); }
+/* 시간순(최근이 위)으로 한 줄에 하나씩: 왼쪽 그림 · 오른쪽 제목과 날짜 */
+.minis { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.mini { display: flex; align-items: center; gap: 14px; width: 100%; padding: 0; border: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.mini > .mini-img { flex: none; width: 132px; }
+.mini-text { min-width: 0; }
+.mini .mini-name { margin-top: 0; }
+.mini:hover .mini-name { text-decoration: underline; }
 .mini-img { position: relative; display: block; margin: var(--px); aspect-ratio: 4 / 3; background: var(--paper-2); overflow: hidden; box-shadow: 0 calc(-1 * var(--px)) 0 0 var(--ink), 0 var(--px) 0 0 var(--ink), calc(-1 * var(--px)) 0 0 0 var(--ink), var(--px) 0 0 0 var(--ink); }
 .mini-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .mini:hover .mini-img img { image-rendering: pixelated; }
 .mini-name { display: block; margin-top: 7px; font-size: 12px; line-height: 1.4; }
 .mini-date { display: block; color: var(--mute); font-size: 11px; }
-.play { position: absolute; right: 4px; bottom: 4px; padding: 0 5px; background: var(--ink); color: var(--paper); font-size: 10px; }
+.play { position: absolute; right: 4px; bottom: 4px; padding: 0 5px; background: var(--ink); color: var(--paper); font-size: 10px; z-index: 2; }
+
+/* 사진 틀 = 도트 액자: 모서리 깎인 먹색 테두리 + 오른쪽 아래로 각진 그림자 + 안쪽 밝은/어두운 테두리 + 아주 옅은 도트 격자 */
+.stage-view, .soon-view, .mini-img {
+  box-shadow:
+    0 calc(-1 * var(--px)) 0 0 var(--ink),
+    0 var(--px) 0 0 var(--ink),
+    calc(-1 * var(--px)) 0 0 0 var(--ink),
+    var(--px) 0 0 0 var(--ink),
+    calc(2 * var(--px)) calc(2 * var(--px)) 0 0 color-mix(in srgb, var(--ink) 22%, transparent);
+}
+.stage-view::after, .soon-view::after, .mini-img::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  box-shadow: inset var(--px) var(--px) 0 0 rgba(255, 255, 255, 0.55), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 0 rgba(38, 71, 79, 0.28);
+  background-image: linear-gradient(rgba(38, 71, 79, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(38, 71, 79, 0.07) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+.mini-img::after { box-shadow: inset 2px 2px 0 0 rgba(255, 255, 255, 0.55), inset -2px -2px 0 0 rgba(38, 71, 79, 0.28); }
 
 /* 휴대폰 연표: 배경 · 소품 · 셰이더를 날짜순으로 한 줄에 (배경은 크게, 나머지는 작게). PC 에서는 숨김 */
-.feed { display: none; --rail: 40px; position: relative; list-style: none; margin: 0; padding: 6px 0 28px var(--rail); }
-.feed::before { content: ""; position: absolute; top: 0; bottom: 0; left: 12px; border-left: var(--px) dashed var(--ink); }
+.feed { display: none; --rail: 82px; --c: 36px; position: relative; list-style: none; margin: 0; padding: 6px 0 28px var(--rail); } /* --c: 세로줄 가운데, --rail: 내용 시작 (그 사이로 시계가 지나감) */
+.feed::before { content: ""; position: absolute; top: 0; bottom: 0; left: calc(var(--c) - 1.5px); border-left: var(--px) dashed var(--ink); }
 .feed-item { position: relative; }
 .feed .when { height: auto; text-align: left; display: flex; align-items: center; gap: 8px; }
 .feed .when b { margin: 0; }
 .feed-bg { padding: 26px 0 30px; }
 .feed-bg .when { margin-bottom: 14px; }
-.feed-bg .when i { position: absolute; left: -35px; top: 50%; margin: -7px 0 0; }
+.feed-bg .when i { position: absolute; left: calc(var(--c) - var(--rail) - 7.5px); top: 50%; margin: -7px 0 0; }
 .feed-etc { padding: 7px 0; }
 .feed-etc .when { margin: 16px 0 8px; }
 .feed-mini { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; padding: 0; border: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
 .feed-mini .mini-img { flex: none; width: 88px; }
 .feed-mini .mini-name { margin-top: 0; }
 .feed-text { min-width: 0; }
-.feed-dot { position: absolute; left: -30px; top: 50%; width: 7px; height: 7px; margin-top: -4px; background: var(--paper); box-shadow: 0 0 0 var(--px) var(--ink); }
+.feed-dot { position: absolute; left: calc(var(--c) - var(--rail) - 3.5px); top: 50%; width: 7px; height: 7px; margin-top: -4px; background: var(--paper); box-shadow: 0 0 0 var(--px) var(--ink); }
 .feed-mini:hover .mini-name { text-decoration: underline; }
+
+/* ---------- 메시지 창 (첫 화면 오른쪽, 휴대폰은 연락 칸) ---------- */
+.msgbox {
+  position: absolute; right: 0; top: 9vh; z-index: 2; width: 340px; background: var(--paper);
+  box-shadow:
+    0 calc(-1 * var(--px)) 0 0 var(--ink), 0 var(--px) 0 0 var(--ink),
+    calc(-1 * var(--px)) 0 0 0 var(--ink), var(--px) 0 0 0 var(--ink),
+    calc(2 * var(--px)) calc(2 * var(--px)) 0 0 color-mix(in srgb, var(--ink) 22%, transparent);
+}
+.mb-bar { display: flex; align-items: center; gap: 8px; padding: 3px 10px; background: var(--ink); color: var(--paper); font-size: 12px; }
+.mb-bar b { font-weight: 400; }
+.mb-bar span:last-child { margin-left: auto; color: var(--accent); }
+.mb-dots { display: inline-flex; gap: 3px; }
+.mb-dots i { width: 6px; height: 6px; background: var(--accent); }
+.mb-dots i:nth-child(2) { background: #f6c83a; }
+.mb-dots i:nth-child(3) { background: var(--paper); }
+.mb-log {
+  display: flex; flex-direction: column; gap: 8px; max-height: 170px; overflow-y: auto; padding: 12px;
+  background-color: var(--paper-2);
+  background-image: radial-gradient(color-mix(in srgb, var(--accent) 25%, transparent) 1px, transparent 1.4px);
+  background-size: 9px 9px;
+}
+.mb-bubble { position: relative; max-width: 86%; margin: 2px; padding: 5px 10px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; box-shadow: 0 -2px 0 0 var(--ink), 0 2px 0 0 var(--ink), -2px 0 0 0 var(--ink), 2px 0 0 0 var(--ink); }
+.mb-bubble.them { align-self: flex-start; background: #ffffff; }
+.mb-bubble.me { align-self: flex-end; background: var(--accent); color: var(--accent-ink); }
+.mb-bubble small { display: block; font-size: 11px; opacity: 0.8; }
+.mb-form { display: grid; gap: 8px; padding: 10px; border-top: var(--px) solid var(--ink); }
+.mb-who { display: flex; align-items: center; gap: 10px; }
+.mb-form input:not([type="checkbox"]), .mb-form textarea {
+  width: 100%; min-width: 0; padding: 4px 8px; font: inherit; font-size: 13px; color: var(--ink);
+  background: #ffffff; border: 0; border-radius: 0; box-shadow: 0 0 0 2px var(--ink);
+}
+.mb-form input:focus, .mb-form textarea:focus { outline: none; box-shadow: 0 0 0 2px var(--accent); }
+.mb-form input:disabled { opacity: 0.45; }
+.mb-form textarea { resize: vertical; min-height: 64px; line-height: 1.6; }
+.mb-anon { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; white-space: nowrap; cursor: pointer; }
+.mb-anon input { accent-color: var(--accent); }
+.mb-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.mb-send { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mb-send small { color: var(--mute); font-size: 11px; line-height: 1.4; }
+.mb-send .pxbtn { flex: none; margin: var(--px); cursor: pointer; font: inherit; font-size: 13px; border: 0; }
+.mb-send .pxbtn:disabled { opacity: 0.5; cursor: default; }
 
 /* 마지막: 연락 */
 .outro { display: flex; flex-direction: column; justify-content: center; }
@@ -203,6 +278,9 @@ a { color: inherit; }
 
 @media (max-width: 960px) {
   .stages { display: none; }
+  .msgbox { position: static; width: auto; margin: 6px var(--px) 22px; } /* 연락 칸 안으로 옮겨짐 */
+  .rail-clock canvas { width: 66px; height: 42px; } /* 휴대폰은 조금 작게 */
+  .rail-clock span { font-size: 11px; padding: 0 5px; }
   .feed { display: block; }
   .intro { padding-bottom: max(48px, 38svh); } /* 휴대폰: 글이 길어져도 아래로 물결 자리가 남게 (위아래가 서서히 사라지므로 넉넉히) */
   .nav a { white-space: nowrap; }

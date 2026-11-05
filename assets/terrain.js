@@ -55,7 +55,9 @@ export function mountTerrain(canvas, host) {
     canvas.style.width = cw + 'px'; canvas.style.height = ch + 'px';
     // 지평선 = 소개 글 바로 아래 + 여백. 화면 폭이 바뀌어 글이 길어져도 글과 격자 사이는 늘 같다.
     // 그 아래로 격자가 투명 → 진하게 나타난다.
-    const top = Math.min(ch - 40, text.getBoundingClientRect().bottom - hr.top + GAP);
+    // 소개 글과 (PC 에서 오른쪽에 있는) 메시지 창 중 더 아래 끝 + 여백
+    const boxes = [text, ...host.querySelectorAll(':scope > .msgbox')].filter((el) => el.offsetParent);
+    const top = Math.min(ch - 40, Math.max(...boxes.map((el) => el.getBoundingClientRect().bottom)) - hr.top + GAP);
     const R = ch - top; // 격자가 보이는 높이
     const fadeEnd = top + Math.min(Math.max(FADE_MIN, R * 0.4), R * 0.5);
     // 좁은 화면(휴대폰)은 소개 칸 바로 아래로 연표가 이어지므로 아래 끝도 바탕에 녹아들게 한다.

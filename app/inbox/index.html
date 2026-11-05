@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script src="../auth.js?v=73d71f95"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef8fa">
+<meta name="robots" content="noindex, nofollow">
+<title>midorichart · 메시지함</title>
+<link rel="icon" href="../../assets/favicon.png" type="image/png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.min.css">
+<style>
+  /* 툴 모음(/app/)과 같은 도트 · 청록 스타일 */
+  :root {
+    color-scheme: light;
+    --paper: #eef8fa; --paper-2: #d7eef2; --ink: #26474f; --ink-2: #4d6c73; --mute: #89a3a8;
+    --accent: #42b7c9; --accent-ink: #ffffff; --down: #c63434; --px: 3px;
+    --font: "Galmuri11", "Galmuri9", monospace;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+    color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.7; -webkit-font-smoothing: none;
+    background-color: var(--paper);
+    background-image: radial-gradient(color-mix(in srgb, var(--accent) 22%, transparent) 1px, transparent 1.4px);
+    background-size: 18px 18px;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: var(--px) solid var(--accent); outline-offset: var(--px); }
+  .px { box-shadow: 0 calc(-1 * var(--px)) 0 0 var(--ink), 0 var(--px) 0 0 var(--ink), calc(-1 * var(--px)) 0 0 0 var(--ink), var(--px) 0 0 0 var(--ink); }
+
+  .site-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 58px; padding: 0 max(20px, calc((100vw - 880px) / 2)); background: var(--paper); border-bottom: var(--px) solid var(--ink); }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-size: 16px; }
+  .brand img { height: 34px; width: auto; display: block; }
+  .wrap { width: 100%; max-width: 880px; margin: 0 auto; padding: 0 20px 60px; flex: 1; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; margin: var(--px); padding: 3px 11px; font: inherit; font-size: 12px; color: var(--ink); background: var(--paper); border: 0; cursor: pointer; text-decoration: none; }
+  .btn:hover { background: var(--ink); color: var(--paper); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.danger:hover { background: var(--down); }
+  .btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+
+  .intro { padding: 40px 0 24px; display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .intro h1 { margin: 0; font-size: 30px; line-height: 1.3; font-weight: 400; }
+  .intro h1 span { color: var(--mute); font-size: 16px; margin-left: 10px; }
+  .tools { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+  .msg { margin: var(--px); padding: 14px 18px; background: var(--paper); }
+  .msg.unread { background: #ffffff; }
+  .msg-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--mute); }
+  .msg-head b { color: var(--ink); font-weight: 400; font-size: 14px; }
+  .msg-head .new { padding: 0 6px; background: var(--accent); color: var(--accent-ink); }
+  .msg-head .lang { padding: 0 5px; box-shadow: 0 0 0 1px var(--mute); }
+  .msg-body { margin: 10px 0 8px; white-space: pre-wrap; word-break: break-word; }
+  .msg-foot { display: flex; justify-content: flex-end; gap: 2px; }
+  .empty { padding: 40px 0; text-align: center; color: var(--mute); }
+  .err { color: var(--down); font-size: 12px; min-height: 18px; }
+
+  .site-foot { display: flex; justify-content: space-between; max-width: 880px; width: 100%; margin: 0 auto; padding: 18px 20px 36px; color: var(--mute); font-size: 11px; }
+  .site-foot a { text-decoration: none; }
+  @media (max-width: 640px) { .brand img { height: 28px; } .intro h1 { font-size: 24px; } }
+</style>
+</head>
+<body>
+<header class="site-head">
+  <a class="brand" href="../"><img src="../../assets/logo.png" alt="" width="237" height="173">midorichart</a>
+  <a class="btn px" href="../">툴 모음</a>
+</header>
+
+<main class="wrap">
+  <section class="intro">
+    <h1>메시지함<span id="count"></span></h1>
+    <div class="tools">
+      <button class="btn px" type="button" data-filter="all" aria-pressed="true">전체</button>
+      <button class="btn px" type="button" data-filter="unread" aria-pressed="false">안 읽음</button>
+      <button class="btn px" type="button" id="all-read">모두 읽음으로</button>
+      <button class="btn px" type="button" id="reload">새로고침</button>
+    </div>
+  </section>
+  <p class="err" id="err"></p>
+  <ul class="list" id="list"></ul>
+  <p class="empty" id="empty" hidden>메시지가 없어요.</p>
+</main>
+
+<footer class="site-foot">
+  <span>midorichart.com 첫 화면의 메시지 창으로 온 메시지</span>
+  <a href="/">midorichart.com</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+<script src="../config.js?v=e3378918"></script>
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const cfg = window.HUB_CONFIG || {};
+  const sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  const LANG = { ko: '한국어', ja: '日本語', en: 'EN' };
+  let rows = [];
+  let filter = 'all';
+
+  const when = (t) => new Date(t).toLocaleString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+  function render() {
+    const unread = rows.filter((r) => !r.read).length;
+    $('#count').textContent = `${rows.length}개 · 안 읽음 ${unread}`;
+    const shown = filter === 'unread' ? rows.filter((r) => !r.read) : rows;
+    $('#empty').hidden = shown.length > 0;
+    $('#list').innerHTML = shown.map((r) => `
+      <li class="msg px ${r.read ? '' : 'unread'}" data-id="${r.id}">
+        <div class="msg-head">
+          ${r.read ? '' : '<span class="new">NEW</span>'}
+          <b>${r.name ? esc(r.name) : '익명'}</b>
+          <span>${when(r.created_at)}</span>
+          ${r.lang ? `<span class="lang">${esc(LANG[r.lang] || r.lang)}</span>` : ''}
+        </div>
+        <p class="msg-body">${esc(r.body)}</p>
+        <div class="msg-foot">
+          <button class="btn px" type="button" data-act="read">${r.read ? '안 읽음으로' : '읽음'}</button>
+          <button class="btn px danger" type="button" data-act="del">삭제</button>
+        </div>
+      </li>`).join('');
+  }
+
+  async function load() {
+    $('#err').textContent = '';
+    const { data, error } = await sb.from('contact_messages').select('id, created_at, name, body, lang, read').order('created_at', { ascending: false }).limit(500);
+    if (error) {
+      $('#err').textContent = error.code === '42P01' ? 'contact_messages 표가 아직 없어요. app/inbox/supabase/messages.sql 을 SQL Editor 에서 실행해 주세요.' : `불러오지 못했어요: ${error.message}`;
+      return;
+    }
+    rows = data;
+    render();
+  }
+
+  $('#list').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-act]');
+    if (!b) return;
+    const id = Number(b.closest('[data-id]').dataset.id);
+    const r = rows.find((x) => x.id === id);
+    if (b.dataset.act === 'read') {
+      const { error } = await sb.from('contact_messages').update({ read: !r.read }).eq('id', id);
+      if (error) return ($('#err').textContent = error.message);
+      r.read = !r.read;
+    } else {
+      if (!confirm('이 메시지를 지울까요? 되돌릴 수 없어요.')) return;
+      const { error } = await sb.from('contact_messages').delete().eq('id', id);
+      if (error) return ($('#err').textContent = error.message);
+      rows = rows.filter((x) => x.id !== id);
+    }
+    render();
+  });
+  document.querySelectorAll('[data-filter]').forEach((b) => b.addEventListener('click', () => {
+    filter = b.dataset.filter;
+    document.querySelectorAll('[data-filter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    render();
+  }));
+  $('#all-read').onclick = async () => {
+    const ids = rows.filter((r) => !r.read).map((r) => r.id);
+    if (!ids.length) return;
+    const { error } = await sb.from('contact_messages').update({ read: true }).in('id', ids);
+    if (error) return ($('#err').textContent = error.message);
+    rows.forEach((r) => (r.read = true));
+    render();
+  };
+  $('#reload').onclick = load;
+
+  sb.auth.getSession().then(({ data }) => (data.session ? load() : window.midoriToLogin()));
+})();
+</script>
+</body>
+</html>

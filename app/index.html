@@ -112,7 +112,7 @@
   </section>
 
   <section>
-    <h2 class="section-label"><span>앱</span><span>3</span></h2>
+    <h2 class="section-label"><span>앱</span><span>4</span></h2>
     <ul class="apps">
       <li>
         <a class="app px" href="tasks/">
@@ -159,6 +159,21 @@
           </div>
         </a>
       </li>
+      <li>
+        <a class="app px" href="inbox/">
+          <div class="app-top">
+            <span class="app-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v11H9l-4 3.5v-3.5H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>
+            </span>
+          </div>
+          <h2>메시지함</h2>
+          <p>midorichart.com 첫 화면의 메시지 창으로 온 문의를 모아 봐요. 새 메시지는 디스코드로도 알려줘요.</p>
+          <div class="app-foot">
+            <span id="inbox-unread">문의 · 메시지</span>
+            <b aria-hidden="true">▶</b>
+          </div>
+        </a>
+      </li>
     </ul>
   </section>
 </main>
@@ -189,6 +204,12 @@
     $('#who').hidden = $('#logout').hidden = !session;
     $('#who').textContent = session ? session.user.email : '';
     if (!session) $('#authEmail').focus();
+    // 메시지함 카드: 안 읽은 메시지 수 (표가 아직 없으면 그냥 둔다)
+    if (session) {
+      sb.from('contact_messages').select('id', { count: 'exact', head: true }).eq('read', false).then(({ count, error }) => {
+        if (!error && count) $('#inbox-unread').textContent = `안 읽은 메시지 ${count}개`;
+      });
+    }
   }
 
   let current; // 처음 한 번은 반드시 그리도록 undefined 로 시작

@@ -60,6 +60,7 @@ def build(src, lang, ui):
     # 고정 문구
     for key, text in ui[lang].items():
         s = re.sub(rf'(data-t="{key}"[^>]*>)[^<]*(<)', lambda m: m.group(1) + html.escape(text, quote=False) + m.group(2), s)
+        s = re.sub(rf'(data-ph="{key}" placeholder=")[^"]*(")', lambda m: m.group(1) + html.escape(text, quote=True) + m.group(2), s)
     return s
 
 
