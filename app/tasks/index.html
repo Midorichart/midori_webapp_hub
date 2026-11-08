@@ -296,7 +296,7 @@
       <div class="frow">
         <label><input type="checkbox" class="chk" id="blkRemind"> 알림</label>
         <select class="sel" id="blkRemindMin" aria-label="알림 시점"></select>
-        <span class="hint">디스코드 · 바탕화면 위젯</span>
+        <span class="hint">디스코드로 알림</span>
       </div>
       <div class="frow" id="blkDoneRow"><label><input type="checkbox" class="chk" id="blkDone"> 이 날 완료</label></div>
       <div class="actions">
@@ -360,7 +360,7 @@
   const hmToMin = s => { const [h, m] = s.split(':').map(Number); return h*60 + (m||0); };
   const TODAY = ymd(new Date());
 
-  // 알림 (루틴·시간표 블록): 시작 몇 분 전에 디스코드 + 바탕화면 위젯으로
+  // 알림 (루틴·시간표 블록): 시작 몇 분 전에 디스코드로
   const REMIND_MINS = [0, 5, 10, 15, 30, 60];
   const remindLabel = m => m === 0 ? '시작할 때' : m % 60 === 0 ? `${m / 60}시간 전` : `${m}분 전`;
   const remindOptions = sel => [...new Set([...REMIND_MINS, sel])].sort((a, b) => a - b)
