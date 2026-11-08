@@ -21,14 +21,17 @@
 <link rel="alternate" hreflang="x-default" href="https://midorichart.com/">
 <script>window.PAGE_LANG = 'ko';</script>
 <link rel="icon" href="../assets/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.min.css">
-<link rel="stylesheet" href="../assets/portfolio.css?v=180eccd5">
+<link rel="stylesheet" href="../assets/portfolio.css?v=c6a758f0">
 <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
+<!-- 도트 물결: 화면에 고정된 맨 뒤 레이어 (terrain.js). 어디까지 스크롤해도 늘 보인다 -->
+<canvas id="terrain" class="terrain" aria-hidden="true"></canvas>
 <header class="site-head">
-  <a class="brand" href="./"><img src="../assets/logo.png" alt="" width="237" height="173">midorichart</a>
+  <a class="brand" href="./"><img src="../assets/logo.png" alt="" width="508" height="512">midorichart</a>
   <nav class="nav" aria-label="섹션">
     <a href="#backgrounds" data-t="timeline">연표</a>
     <a href="#contact" data-t="contact">연락</a>
@@ -40,34 +43,42 @@
 
 <main class="wrap">
   <section class="intro snap">
-    <canvas id="terrain" class="terrain" aria-hidden="true"></canvas>
     <div class="intro-text">
     <div class="intro-top">
-      <img class="intro-logo" src="../assets/logo.png" alt="緑 로고" width="237" height="173">
-      <h1 class="logo">MIDORI<span>緑チャート</span></h1>
+      <img class="intro-logo" src="../assets/logo.png" alt="" width="508" height="512">
+      <h1 class="logo"><img class="logo-word" src="../assets/logo-word.png" alt="MIDORI" width="679" height="160"><span>緑チャート</span></h1>
     </div>
-    <p><span data-t="intro1">WARUDO 배경이랑 소품 만들어요.</span><br><span data-t="intro2">Studio Raming 소속 · 3D Environment &amp; Props</span></p>
-    <p class="links">
-      <a class="pxbtn accent" href="https://raming.booth.pm/" target="_blank" rel="noopener">BOOTH</a>
-      <a class="pxbtn" href="https://studioraming.com/" target="_blank" rel="noopener">studioraming.com</a>
-      <a class="pxbtn" href="https://x.com/midorichart" target="_blank" rel="noopener">X @midorichart</a>
-    </p>
+    <p class="intro-say"><span data-t="intro1">WARUDO 배경이랑 소품 만들어요.</span><br><span data-t="intro2">Studio Raming 소속 · 3D Environment &amp; Props</span></p>
+    <ul class="links-v">
+      <li><a class="pxbtn" href="https://raming.booth.pm/" target="_blank" rel="noopener">
+        <svg class="ic ic-booth" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5V4a3 3 0 0 1 6 0v1" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="5" width="12" height="10" rx="1.5"/><path d="M5.5 8.5v1M10.5 8.5v1" stroke="#fff" stroke-width="1.4"/></svg>
+        <b>BOOTH</b><small>raming.booth.pm</small></a></li>
+      <li><a class="pxbtn" href="https://studioraming.com/" target="_blank" rel="noopener">
+        <svg class="ic ic-web" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M1.8 8h12.4M8 1.8c-2.2 2.4-2.2 10 0 12.4M8 1.8c2.2 2.4 2.2 10 0 12.4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+        <b>studioraming.com</b><small>Studio Raming</small></a></li>
+      <li><a class="pxbtn" href="https://x.com/midorichart" target="_blank" rel="noopener">
+        <svg class="ic ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        <b>X</b><small>@midorichart</small></a></li>
+    </ul>
     <a class="scroll-cue" href="#backgrounds" data-t="cue">▼ 연표</a>
     </div>
-    <!-- 메시지 창: PC 는 소개 오른쪽, 휴대폰은 맨 아래 연락 칸으로 옮겨진다 (portfolio.js). 받은 메시지는 /app/inbox/ -->
+    <!-- 메시지 창: PC 는 소개 오른쪽, 휴대폰은 로고 바로 아래(맨 위). 받은 메시지는 /app/inbox/ 와 디스코드로.
+         'admin' 을 보내면 이 창에서 이메일 · 비밀번호를 받아 로그인하고 관리자 페이지(/app/)로 간다 (portfolio.js) -->
     <aside class="msgbox" id="msgbox" aria-label="메시지 보내기">
       <div class="mb-bar"><span class="mb-dots" aria-hidden="true"><i></i><i></i><i></i></span><b data-t="mbTitle">MESSAGE</b><span data-t="mbTo">→ MIDORI</span></div>
       <div class="mb-log" id="mb-log" aria-live="polite">
         <p class="mb-bubble them" data-t="mbHello">궁금한 점이나 작업 의뢰, 편하게 남겨 주세요!</p>
+        <p class="mb-bubble them" data-t="mbNote">여기에 입력하면 저에게 디스코드로 알림이 와요.</p>
       </div>
       <form class="mb-form" id="mb-form" autocomplete="off">
         <div class="mb-who">
           <input id="mb-name" maxlength="40" data-ph="mbName" placeholder="이름">
           <label class="mb-anon"><input type="checkbox" id="mb-anon"><span data-t="mbAnon">익명으로</span></label>
         </div>
-        <textarea id="mb-body" maxlength="2000" rows="3" required data-ph="mbBody" placeholder="메시지 (답장이 필요하면 메일이나 X 아이디도 함께)"></textarea>
+        <textarea id="mb-body" maxlength="2000" rows="4" required data-ph="mbBody" placeholder="메시지 (답장이 필요하면 메일이나 X 아이디도 함께)"></textarea>
+        <input id="mb-pw" type="password" maxlength="200" autocomplete="current-password" hidden>
         <input class="mb-hp" id="mb-hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-        <div class="mb-send"><small id="mb-status"></small><button class="pxbtn accent" type="submit" data-t="mbSend">보내기 ▶</button></div>
+        <div class="mb-send"><small id="mb-status"></small><button class="pxbtn" type="button" id="mb-cancel" data-t="mbCancel" hidden>취소</button><button class="pxbtn accent" type="submit" data-t="mbSend">보내기 ▶</button></div>
       </form>
     </aside>
   </section>
@@ -81,7 +92,7 @@
     <div class="contact">
       <p id="reach">일 얘기는 <a href="mailto:midorichart@gmail.com">midorichart@gmail.com</a> 이나 <a href="https://x.com/midorichart" target="_blank" rel="noopener">X DM</a> 으로 주세요.</p>
       <p class="links">
-        <a class="pxbtn accent" href="https://raming.booth.pm/" target="_blank" rel="noopener">BOOTH</a>
+        <a class="pxbtn" href="https://raming.booth.pm/" target="_blank" rel="noopener">BOOTH</a>
         <a class="pxbtn" href="https://studioraming.com/" target="_blank" rel="noopener">studioraming.com</a>
         <a class="pxbtn" href="https://x.com/midorichart" target="_blank" rel="noopener">X @midorichart</a>
       </p>
@@ -115,7 +126,7 @@
   </div>
 </dialog>
 
-<script src="../assets/portfolio/works.js?v=2380124b"></script>
-<script type="module" src="../assets/portfolio.js?v=96decaa1"></script>
+<script src="../assets/portfolio/works.js?v=0a953b51"></script>
+<script type="module" src="../assets/portfolio.js?v=da1b3064"></script>
 </body>
 </html>

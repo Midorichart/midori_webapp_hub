@@ -1,4 +1,5 @@
 // midorichart.com 포트폴리오 데이터 — 배경은 BOOTH 상품 이미지 + X(@midorichart) 작업 과정, 그 외 작업은 ETC
+// ※ 지금은 관리자 페이지(/app/portfolio/)에서 고친 Supabase 내용이 우선이고, 이 파일은 그쪽이 비었거나 못 불러올 때만 쓰인다
 // 배경 desc 는 직접 쓴 소개, 그 밖의 작업 desc 는 X 에 쓴 글. i18n.ja / i18n.en 에 일본어 · 영어 (없는 항목은 한국어 그대로)
 window.BACKGROUNDS = [
  {

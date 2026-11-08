@@ -1,9 +1,30 @@
 // 메인 페이지: 배경 연표(큰 화면에선 한 칸씩 딱딱 넘어가고, 도트 디졸브로 나타남 · 사진도 디졸브로 넘어감), 사진 크게 보기, KO · JA · EN 전환
-import { mountTerrain } from './terrain.js?v=775b6eaa';
+import { mountTerrain } from './terrain.js?v=8b990d6f';
 
-const BGS = window.BACKGROUNDS || [];
-const ETC = window.ETC || [];
+// 포트폴리오 내용: Supabase 의 portfolio_items (관리자 페이지 /app/portfolio/ 에서 고침).
+// 표가 비었거나 못 불러오면 works.js 의 내용을 그대로 쓴다. (아래 키는 공개용 publishable 키: 읽기만 가능)
+const SB_URL = 'https://avnqsbwbmvwtpkquvrtt.supabase.co';
+const SB_KEY = 'sb_publishable_GTRIqmu5GN5yeYswVZNb2g_9QcR32M4';
+let BGS = window.BACKGROUNDS || [];
+let ETC = window.ETC || [];
+async function loadWorks() {
+  try {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 3000);
+    const r = await fetch(`${SB_URL}/rest/v1/portfolio_items?select=id,kind,date,data&order=date.desc`, { headers: { apikey: SB_KEY }, signal: ctl.signal });
+    clearTimeout(timer);
+    if (!r.ok) return;
+    const rows = await r.json();
+    if (!rows.length) return;
+    BGS = rows.filter((x) => x.kind === 'bg').map((x) => ({ ...x.data, key: x.id, date: x.date }));
+    ETC = rows.filter((x) => x.kind === 'etc').map((x) => ({ ...x.data, id: x.id, date: x.date }));
+  } catch {}
+}
 const DIR = new URL('portfolio/', import.meta.url).href; // 언어별 페이지(/ja/ 등)에서도 같은 사진 폴더
+// 사진 주소: 관리자 페이지에서 올린 사진은 전체 주소(Supabase Storage), 예전 사진은 assets/portfolio/ 의 파일 이름
+const isUrl = (s) => /^https?:\/\//.test(s);
+const full = (i) => (isUrl(i.src) ? i.src : `${DIR}${i.src}.webp`);
+const thumb = (i) => i.thumb || (isUrl(i.src) ? i.src : `${DIR}t/${i.src}.webp`);
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const dot = (d) => d.replace(/-/g, '.');
@@ -19,6 +40,8 @@ const UI = {
     intro1: 'WARUDO 배경이랑 소품 만들어요.', intro2: 'Studio Raming 소속 · 3D Environment & Props',
     side: '이 배경 전에 만든 것',
     mbTitle: 'MESSAGE', mbTo: '→ MIDORI', mbHello: '궁금한 점이나 작업 의뢰, 편하게 남겨 주세요!', mbName: '이름', mbAnon: '익명으로',
+    mbNote: '여기에 입력하면 저에게 디스코드로 알림이 와요.', mbCancel: '취소',
+    adId: '관리자 로그인 — 이메일을 입력하세요.', adPw: '비밀번호를 입력하세요.', adWait: '로그인 중…', adOk: '로그인했어요. 관리자 페이지로 이동할게요.', adFail: '이메일 또는 비밀번호가 맞지 않아요. 다시 입력하세요.', adBye: '로그인을 취소했어요.',
     mbBody: '메시지 (답장이 필요하면 메일이나 X 아이디도 함께)', mbSend: '보내기 ▶', mbSending: '보내는 중…', mbAnonName: '익명',
     mbThanks: '잘 받았어요! 확인하고 답장할게요. 연락처를 안 남기셨다면 답장은 어려워요.', mbSlow: '조금 뒤에 다시 보내 주세요.', mbFail: '못 보냈어요. midorichart@gmail.com 으로 메일 주세요.', soon: '다음 배경 준비 중', soonNote: (name) => `${name} 다음 배경을 만들고 있어요. 그 사이에 만든 것들은 오른쪽에.`, tape: '준비중', post: '작업 글 보기 (X) ↗', photos: (n) => `사진 ${n}장`, month: (m) => `${m}월`,
     view: (name) => `${name} 사진 보기`, close: '닫기', play: '▶ X 에서 영상 보기',
@@ -30,6 +53,8 @@ const UI = {
     intro1: 'WARUDOの背景や小物を作っています。', intro2: 'Studio Raming 所属 · 3D Environment & Props',
     side: 'この背景の前に作ったもの',
     mbTitle: 'MESSAGE', mbTo: '→ MIDORI', mbHello: 'ご質問やお仕事のご依頼など、お気軽にどうぞ！', mbName: 'お名前', mbAnon: '匿名で',
+    mbNote: 'ここに入力すると、私にDiscordで通知が届きます。', mbCancel: 'キャンセル',
+    adId: '管理者ログイン — メールアドレスを入力してください。', adPw: 'パスワードを入力してください。', adWait: 'ログイン中…', adOk: 'ログインしました。管理ページに移動します。', adFail: 'メールアドレスまたはパスワードが違います。もう一度入力してください。', adBye: 'ログインをキャンセルしました。',
     mbBody: 'メッセージ（返信が必要な場合はメールかXのIDも一緒に）', mbSend: '送信 ▶', mbSending: '送信中…', mbAnonName: '匿名',
     mbThanks: '受け取りました！確認してお返事します。連絡先がない場合はお返事できません。', mbSlow: '少し時間をおいてもう一度送ってください。', mbFail: '送信できませんでした。midorichart@gmail.com までメールでお願いします。', soon: '次の背景を準備中', soonNote: (name) => `${name} の次の背景を制作中です。その間に作ったものは右側に。`, tape: '準備中', post: '制作ポストを見る (X) ↗', photos: (n) => `写真 ${n}枚`, month: (m) => `${m}月`,
     view: (name) => `${name} の写真を見る`, close: '閉じる', play: '▶ Xで動画を見る',
@@ -41,6 +66,8 @@ const UI = {
     intro1: 'I make backgrounds and props for WARUDO.', intro2: 'At Studio Raming · 3D Environment & Props',
     side: 'Made before this background',
     mbTitle: 'MESSAGE', mbTo: '→ MIDORI', mbHello: 'Questions or commissions? Leave a message anytime!', mbName: 'Name', mbAnon: 'Anonymous',
+    mbNote: 'Messages sent here reach me as a Discord notification.', mbCancel: 'Cancel',
+    adId: 'Admin login — enter your email.', adPw: 'Enter your password.', adWait: 'Signing in…', adOk: 'Signed in. Taking you to the admin page.', adFail: 'Wrong email or password. Please try again.', adBye: 'Login cancelled.',
     mbBody: 'Message (add your email or X handle if you want a reply)', mbSend: 'Send ▶', mbSending: 'Sending…', mbAnonName: 'Anonymous',
     mbThanks: 'Got it, thank you! I will reply once I read it. Without contact info I cannot reply.', mbSlow: 'Please wait a moment and try again.', mbFail: 'Could not send. Please email midorichart@gmail.com instead.', soon: 'Next background in progress', soonNote: (name) => `Working on the next background after ${name}. Things made in the meantime are on the right.`, tape: 'COMING SOON', post: 'Work-in-progress post (X) ↗', photos: (n) => `${n} photos`, month: (m) => MONTHS_EN[m - 1],
     view: (name) => `View ${name} photos`, close: 'Close', play: '▶ Watch on X',
@@ -99,12 +126,16 @@ function dissolveIn(el, done, speed = 22) {
 // 소품은 「그 배경 날짜 ~ 바로 다음(더 최근) 배경 날짜」 사이에 만든 것끼리 묶는다. 가장 오래된 것들은 마지막 칸에.
 // 각 배경 칸에는 「바로 전 배경 ~ 이 배경을 낸 날」 사이에 만든 것 (이 배경보다 먼저 만든 것만).
 // 가장 최근 배경보다 뒤에 만든 것은 맨 위 「최근 작업」 칸(LATEST)에.
-const PERIOD = BGS.map(() => []);
-const LATEST = [];
-for (const w of ETC) {
-  let k = -1;
-  BGS.forEach((b, i) => { if (b.date >= w.date) k = i; }); // 날짜가 같거나 뒤인 배경 중 가장 오래된 것
-  (k < 0 ? LATEST : PERIOD[k]).push(w);
+let PERIOD = [];
+let LATEST = [];
+function group() {
+  PERIOD = BGS.map(() => []);
+  LATEST = [];
+  for (const w of ETC) {
+    let k = -1;
+    BGS.forEach((b, i) => { if (b.date >= w.date) k = i; }); // 날짜가 같거나 뒤인 배경 중 가장 오래된 것
+    (k < 0 ? LATEST : PERIOD[k]).push(w);
+  }
 }
 let cycleTimers = [];
 
@@ -113,7 +144,7 @@ function bgBlock(g, n) {
   const cover = g.imgs[0];
   return `<div class="track-bg">
       <button class="stage-view" type="button" data-bg="${g.key}" data-cycle="${n}" aria-label="${esc(T().view(g.name))}">
-        <img src="${DIR}${cover.src}.webp" alt="${esc(g.name)}" width="${cover.w}" height="${cover.h}" loading="lazy" decoding="async">
+        <img src="${esc(full(cover))}" alt="${esc(g.name)}" width="${cover.w || 1600}" height="${cover.h || 900}" loading="lazy" decoding="async">
       </button>
       <div class="stage-info">
         <div class="stage-head">
@@ -132,7 +163,7 @@ function bgBlock(g, n) {
 function etcThumb(w) {
   const c = w.imgs.find((i) => i.w / i.h >= 1.2) || w.imgs[0];
   const vid = w.imgs.some((i) => i.video) ? '<span class="play">▶</span>' : '';
-  return `<span class="mini-img"><img src="${DIR}t/${c.src}.webp" alt="" loading="lazy" decoding="async">${vid}</span>`;
+  return `<span class="mini-img"><img src="${esc(thumb(c))}" alt="" loading="lazy" decoding="async">${vid}</span>`;
 }
 
 // ---------- 다음 배경 준비 중: 빈 사진 틀 + 노란 「준비중」 테이프 (도트) ----------
@@ -452,7 +483,7 @@ function startCycle(view) {
     i = (i + 1) % photos.length;
     const im = new Image();
     im.alt = g.name;
-    im.src = DIR + photos[i].src + '.webp';
+    im.src = full(photos[i]);
     im.decode().catch(() => {}).then(() => {
       view.append(im);
       dissolveIn(im, () => {
@@ -497,7 +528,7 @@ let idx = 0;
 function show() {
   const item = cur.imgs[idx];
   const post = item.post || cur.post;
-  $('#v-img').src = DIR + item.src + '.webp';
+  $('#v-img').src = full(item);
   $('#v-img').alt = cur.title;
   $('#v-play').hidden = !item.video;
   if (post) $('#v-play').href = xUrl(post);
@@ -518,7 +549,7 @@ function show() {
 function open(data, start = 0) {
   cur = data;
   idx = Math.max(0, start);
-  $('#v-strip').innerHTML = cur.imgs.map((i, n) => `<button type="button" data-go="${n}" aria-label="${n + 1}"><img src="${DIR}t/${i.src}.webp" alt="" loading="lazy">${i.video ? '<span>▶</span>' : ''}</button>`).join('');
+  $('#v-strip').innerHTML = cur.imgs.map((i, n) => `<button type="button" data-go="${n}" aria-label="${n + 1}"><img src="${esc(thumb(i))}" alt="" loading="lazy">${i.video ? '<span>▶</span>' : ''}</button>`).join('');
   show();
   if (!dlg.open) dlg.showModal();
 }
@@ -528,7 +559,8 @@ function openBg(key, at = 0) {
 }
 function openEtc(id) {
   const w = ETC.find((e) => e.id === id);
-  if (w) open({ title: tr(w, 'title'), date: dot(w.date), desc: tr(w, 'desc'), post: w.id, imgs: w.imgs });
+  // X 글 번호: 따로 적은 post, 없으면 id 가 숫자(예전 항목은 X 글 번호가 id)일 때 그것
+  if (w) open({ title: tr(w, 'title'), date: dot(w.date), desc: tr(w, 'desc'), post: w.post || (/^\d+$/.test(w.id) ? w.id : null), imgs: w.imgs });
 }
 const step = (d) => { if (cur) { idx = (idx + d + cur.imgs.length) % cur.imgs.length; show(); } };
 
@@ -575,27 +607,18 @@ function setLang(next) {
 }
 document.querySelectorAll('[data-lang]').forEach((b) => { b.onclick = () => setLang(b.dataset.lang); });
 applyStatic();
-renderStages(true);
 
-// ---------- 메시지 창 (첫 화면 오른쪽 · 휴대폰은 맨 아래 연락 칸) ----------
+// ---------- 메시지 창 (첫 화면 오른쪽 · 휴대폰은 로고 바로 아래) ----------
 // Supabase 의 send_message() 함수만 부른다 (app/inbox/supabase/messages.sql). 받은 메시지는 /app/inbox/ 와 디스코드로.
 // 아래 키는 공개용(publishable) 키라 페이지에 있어도 되고, 이 키로는 메시지를 보내기만 할 수 있다.
-const MSG_API = 'https://avnqsbwbmvwtpkquvrtt.supabase.co/rest/v1/rpc/send_message';
-const MSG_KEY = 'sb_publishable_GTRIqmu5GN5yeYswVZNb2g_9QcR32M4';
+// 'admin' 을 보내면 메시지 대신 이 창에서 관리자 로그인 (이메일 → 비밀번호) 을 하고 /app/ 으로 간다.
+const MSG_API = `${SB_URL}/rest/v1/rpc/send_message`;
+const MSG_KEY = SB_KEY;
 (() => {
   const box = $('#msgbox');
   if (!box) return;
-  const home = box.parentElement;
-  const narrow = matchMedia('(max-width: 960px)');
-  const place = () => {
-    const contact = $('#contact .contact');
-    if (narrow.matches) contact.insertBefore(box, contact.querySelector('.links'));
-    else home.append(box);
-  };
-  place();
-  narrow.addEventListener('change', place);
-
   const name = $('#mb-name'), anon = $('#mb-anon'), body = $('#mb-body'), log = $('#mb-log'), status = $('#mb-status');
+  const pw = $('#mb-pw'), cancel = $('#mb-cancel'), who = box.querySelector('.mb-who');
   try { name.value = localStorage.getItem('mb-name') || ''; anon.checked = localStorage.getItem('mb-anon') === '1'; } catch {}
   const sync = () => { name.disabled = anon.checked; };
   anon.addEventListener('change', sync);
@@ -608,10 +631,71 @@ const MSG_KEY = 'sb_publishable_GTRIqmu5GN5yeYswVZNb2g_9QcR32M4';
     log.append(p);
     log.scrollTop = log.scrollHeight;
   };
+  // ----- 관리자 로그인 (mode: 'msg' 보통 메시지 → 'id' 이메일 받는 중 → 'pw' 비밀번호 받는 중) -----
+  let mode = 'msg', email = '';
+  const setMode = (m) => {
+    mode = m;
+    const admin = m !== 'msg';
+    who.hidden = admin;
+    cancel.hidden = !admin;
+    body.hidden = m === 'pw';
+    body.required = m !== 'pw';
+    pw.hidden = m !== 'pw';
+    pw.required = m === 'pw';
+    body.placeholder = m === 'id' ? 'email@example.com' : T().mbBody;
+    body.rows = m === 'id' ? 1 : 4;
+    (m === 'pw' ? pw : body).focus();
+  };
+  cancel.addEventListener('click', () => { pw.value = ''; body.value = ''; status.textContent = ''; bubble(T().adBye, 'sys'); setMode('msg'); });
+  let supa = null;
+  const loadSupabase = () => supa || (supa = new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js';
+    s.onload = () => ok(window.supabase.createClient(SB_URL, SB_KEY));
+    s.onerror = () => { supa = null; fail(new Error('load')); };
+    document.head.append(s);
+  }));
+  async function adminStep() {
+    if (mode === 'id') {
+      email = body.value.trim();
+      body.value = '';
+      bubble(email, 'me');
+      bubble(T().adPw, 'them');
+      setMode('pw');
+      return;
+    }
+    const pass = pw.value;
+    pw.value = '';
+    if (!pass) return;
+    bubble('••••••••', 'me');
+    status.textContent = T().adWait;
+    try {
+      const sb = await loadSupabase();
+      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (error) throw error;
+      status.textContent = '';
+      bubble(T().adOk, 'them');
+      location.href = '/app/';
+    } catch {
+      status.textContent = '';
+      bubble(T().adFail, 'them');
+      bubble(T().adId, 'them');
+      setMode('id');
+    }
+  }
+
   $('#mb-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (mode !== 'msg') return adminStep();
     const text = body.value.trim();
     if (!text) return;
+    if (text.toLowerCase() === 'admin') {
+      body.value = '';
+      bubble('admin', 'me');
+      bubble(T().adId, 'them');
+      setMode('id');
+      return;
+    }
     const who = anon.checked ? null : name.value.trim() || null;
     const btn = box.querySelector('button[type=submit]');
     btn.disabled = true;
@@ -634,9 +718,16 @@ const MSG_KEY = 'sb_publishable_GTRIqmu5GN5yeYswVZNb2g_9QcR32M4';
       btn.disabled = false;
     }
   });
-  // Ctrl(⌘) + Enter 로 보내기
-  body.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) $('#mb-form').requestSubmit(); });
+  // Ctrl(⌘) + Enter 로 보내기. 이메일을 받는 중에는 Enter 만으로
+  body.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || mode === 'id')) { e.preventDefault(); $('#mb-form').requestSubmit(); }
+  });
 })();
 
-// ---------- 맨 위 도트 지형 ----------
-mountTerrain($('#terrain'), $('.intro'));
+// ---------- 맨 뒤 도트 물결 (화면 고정) ----------
+mountTerrain($('#terrain'));
+
+// ---------- 연표: 내용을 불러온 뒤 그린다 (Supabase → 안 되면 works.js) ----------
+await loadWorks();
+group();
+renderStages(true);

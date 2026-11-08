@@ -1,4 +1,4 @@
-// 맨 위 도트 물결 — 성긴 와이어프레임이 천천히 일렁이고, 커서가 닿은 곳과 파동이 지나가는 곳만
+// 도트 물결 — 화면에 고정된 맨 뒤 레이어. 성긴 와이어프레임이 천천히 일렁이고, 커서가 닿은 곳과 파동이 지나가는 곳만
 // 칸을 2x2 + 대각선으로 잘게 쪼갠(테셀레이션) 삼각 격자가 서서히 진해졌다 옅어진다.
 // 높이장을 원근으로 투영해서 선과 꼭짓점 도트로 그린다. 캔버스를 절반 해상도로 그리고 늘려서 도트 느낌.
 
@@ -33,39 +33,31 @@ const N = 2;             // 쪼갤 때 한 칸을 N x N 으로
 // 아주 옅은 하늘색 → 로고 청록 (선은 이 중에서 높이에 따라)
 const COLORS = ['#e6f5f8', '#d9f0f4', '#cbeaf0', '#bde4ec', '#acdde7', '#99d5e1', '#84cbd9', '#6dc0d1'];
 
-export function mountTerrain(canvas, host) {
+export function mountTerrain(canvas) {
   const ctx = canvas.getContext('2d');
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const Z = 6, Z0 = 1.2;
   let DOT = 2; // 화면 px 몇 개 = 캔버스 점 1개 (큰 화면 2, 좁은 화면 1: 휴대폰에서 너무 뭉개 보이지 않게)
-  const GAP = 30, FADE_MIN = 90; // 소개 글(버튼 · 연표)과 격자가 시작되는 곳 사이 여백, 격자가 서서히 진해지는 구간 (화면 px)
-  const text = host.querySelector('.intro-text');
+  const HORIZON = 0.44, HORIZON_NARROW = 0.5, FADE_MIN = 90; // 지평선 높이 (화면 높이 비율), 격자가 서서히 진해지는 구간 (화면 px)
   const ALPHAS = 10; // 투명도 단계 (선을 묶어 긋기 위해)
   let W = 0, H = 0, f = 1, hy = 0, camH = 1, cx = 0, COLS = COLS_MAX, conv = 0;
-  let lastT = 0;
+  let lastT = 0, sizeKey = '';
 
   function layout() {
-    // 너비는 화면 끝까지 (본문 폭이 아니라), 높이는 소개 칸만큼
-    const hr = host.getBoundingClientRect();
-    const cw = document.documentElement.clientWidth, ch = hr.height;
+    // 캔버스는 화면 전체에 고정 (CSS). 휴대폰 주소창이 접혔다 펴질 때마다 다시 잡지 않도록 큰 쪽 높이(lvh)를 쓴다
+    const cw = document.documentElement.clientWidth, ch = Math.round(canvas.getBoundingClientRect().height) || innerHeight;
+    const key = `${cw}x${ch}`;
+    if (key === sizeKey) return false;
+    sizeKey = key;
     DOT = cw <= 960 ? 1 : 2;
     W = Math.max(2, Math.round(cw / DOT));
     H = Math.max(2, Math.round(ch / DOT));
     canvas.width = W; canvas.height = H;
-    canvas.style.width = cw + 'px'; canvas.style.height = ch + 'px';
-    // 지평선 = 소개 글 바로 아래 + 여백. 화면 폭이 바뀌어 글이 길어져도 글과 격자 사이는 늘 같다.
-    // 그 아래로 격자가 투명 → 진하게 나타난다.
-    // 소개 글과 (PC 에서 오른쪽에 있는) 메시지 창 중 더 아래 끝 + 여백
-    const boxes = [text, ...host.querySelectorAll(':scope > .msgbox')].filter((el) => el.offsetParent);
-    const top = Math.min(ch - 40, Math.max(...boxes.map((el) => el.getBoundingClientRect().bottom)) - hr.top + GAP);
+    // 지평선 아래로 격자가 투명 → 진하게 나타난다
+    const top = Math.round(ch * (cw <= 960 ? HORIZON_NARROW : HORIZON));
     const R = ch - top; // 격자가 보이는 높이
     const fadeEnd = top + Math.min(Math.max(FADE_MIN, R * 0.4), R * 0.5);
-    // 좁은 화면(휴대폰)은 소개 칸 바로 아래로 연표가 이어지므로 아래 끝도 바탕에 녹아들게 한다.
-    // 큰 화면은 소개 칸이 화면 한 장이라 아래 끝 = 화면 끝이어서 그대로 둔다.
-    const tail = cw <= 960 ? Math.min(110, R * 0.35) : 0;
-    canvas.style.maskImage = canvas.style.webkitMaskImage = tail
-      ? `linear-gradient(to bottom, transparent ${top}px, #000 ${fadeEnd}px, #000 ${ch - tail}px, transparent ${ch}px)`
-      : `linear-gradient(to bottom, transparent ${top}px, #000 ${fadeEnd}px)`;
+    canvas.style.maskImage = canvas.style.webkitMaskImage = `linear-gradient(to bottom, transparent ${top}px, #000 ${fadeEnd}px)`;
     hy = top / DOT;
     // 격자가 차지하는 높이 R 을 기준으로 원근을 잡는다 (예전엔 지평선이 높이의 42% 였으니 R = 0.58 H 와 같은 값)
     const He = (H - hy) / 0.58;
@@ -77,6 +69,7 @@ export function mountTerrain(canvas, host) {
     COLS = Math.round(flatCols + (COLS_MAX - flatCols) * conv);
     camH = (H * 1.02 - hy) * Z0 / f;
     cx = W / 2;
+    return true;
   }
 
   // 격자 좌표(u: 0..COLS-1, v: 0..ROWS-1, 소수 가능) → 바닥 좌표
@@ -96,7 +89,8 @@ export function mountTerrain(canvas, host) {
     if (zz < 0 || zz > Z) return null;
     return { x: ((sx - cx) * (zz + Z0)) / f, z: zz };
   }
-  host.addEventListener('pointermove', (e) => {
+  // 캔버스는 맨 뒤라 직접 마우스를 받지 못하므로 문서 전체에서 받는다 (내용 위에서 움직여도 물결이 반응)
+  addEventListener('pointermove', (e) => {
     cursor = toGround(e.clientX, e.clientY);
     const now = performance.now() / 1000;
     const last = sources[sources.length - 1];
@@ -107,7 +101,7 @@ export function mountTerrain(canvas, host) {
       if (sources.length > 10) sources.shift();
     }
   });
-  host.addEventListener('pointerleave', () => { cursor = null; });
+  document.documentElement.addEventListener('pointerleave', () => { cursor = null; });
 
   function height(x, z, t) {
     let r = 0;
@@ -224,17 +218,13 @@ export function mountTerrain(canvas, host) {
 
   layout();
   canvas.drawAt = draw; // 특정 시점 장면을 바로 그려 볼 때 (확인용)
-  const ro = new ResizeObserver(() => { layout(); if (still) draw(3); });
-  ro.observe(host);
-  ro.observe(text); // 글꼴이 늦게 오거나 언어를 바꿔 글 높이가 달라질 때
+  addEventListener('resize', () => { if (layout() && still) draw(3); });
 
   if (still) { draw(3); return; } // 움직임 줄이기: 한 장면만
 
-  let visible = true;
-  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(host);
   function frame(ms) {
     requestAnimationFrame(frame);
-    if (!visible || document.hidden || canvas.paused) return;
+    if (document.hidden || canvas.paused) return;
     if (ms - lastT < 33) return; // 30fps 면 충분
     lastT = ms;
     draw(ms / 1000);
