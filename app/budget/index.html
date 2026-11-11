@@ -178,6 +178,7 @@
         <button class="btn px" type="button" id="next" aria-label="다음 달">▶</button>
       </span>
       <button class="btn px" type="button" id="today">이번 달</button>
+      <span class="help" id="saved-note" style="margin:0" hidden></span>
     </div>
 
     <!-- 월별 결제 -->
@@ -804,8 +805,12 @@
         const { data, error } = await sb.from('budget_purchases').insert(row).select().single();
         if (error) throw error;
         purchases.push(fix(data));
-        month = ym(row.first_month); // 방금 등록한 결제의 첫 결제 달을 보여줌
       }
+      // 보던 달은 그대로 두고, 첫 결제 달이 다르면 「그 달 보기」 안내만 띄움
+      const fm = ym(row.first_month);
+      const note = $('#saved-note');
+      note.innerHTML = `저장했어요: ${esc(row.merchant || won(amount))} · ${monthText(fm)}부터 결제${fm !== month ? ` <button class="btn sm px" type="button" data-goto="${fm}">그 달 보기</button>` : ''}`;
+      note.hidden = false;
       store.set(card);
       render();
       if (more) {
@@ -814,7 +819,7 @@
         form.date.value = keepDate;
         fillFirst();
         preview();
-        $('#ed-err').textContent = `저장했어요 (${row.merchant || won(amount)}). 다음 것을 넣어 주세요.`;
+        $('#ed-err').textContent = `저장했어요 (${row.merchant || won(amount)} · ${monthText(fm)}부터 결제). 다음 것을 넣어 주세요.`;
       } else {
         ed.close();
       }
@@ -842,7 +847,8 @@
   $('#open-new').onclick = () => openEdit(null);
 
   // ── 탭 · 달 ──────────────────────────────────
-  const go = (m) => { month = m; incReset(); render(); };
+  const go = (m) => { month = m; incReset(); $('#saved-note').hidden = true; render(); };
+  $('#saved-note').addEventListener('click', (e) => { const b = e.target.closest('[data-goto]'); if (b) go(b.dataset.goto); });
   $$('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; render(); }));
   $('#prev').onclick = () => go(addMonth(month, -1));
   $('#next').onclick = () => go(addMonth(month, 1));
