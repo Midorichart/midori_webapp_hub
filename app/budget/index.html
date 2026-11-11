@@ -201,7 +201,8 @@
         <ul class="items" id="inc-list"></ul>
         <form class="inline" id="inc-form">
           <input id="inc-label" placeholder="항목 (예: 월급)" maxlength="40" aria-label="수입 항목">
-          <input id="inc-amount" placeholder="금액" inputmode="numeric" maxlength="16" required aria-label="수입 금액" style="width:9em">
+          <input id="inc-amount" placeholder="금액 (3000+1500 도 돼요)" maxlength="60" required autocomplete="off" aria-label="수입 금액" style="width:13em">
+          <small class="mute" id="inc-calc"></small>
           <button class="btn primary px" type="submit" id="inc-save">수입 추가</button>
           <button class="btn px" type="button" id="inc-cancel" hidden>취소</button>
           <span style="flex:1"></span>
@@ -251,9 +252,9 @@
 
     <!-- 카드 설정 -->
     <section data-panel="cards" hidden>
-      <p class="help">카드마다 「이용 기간」이 달라요. 매달 며칠까지 쓴 것이 다음 달에 결제되는지 정해 두면, 결제를 등록할 때 첫 결제 달을 알아서 골라 줘요. (그 날짜 뒤에 쓴 것은 다다음 달)<br>잘 모르면 「말일」 로 두세요. 등록할 때 첫 결제 달을 직접 바꿀 수도 있어요.</p>
+      <p class="help">카드사 앱이나 명세서의 「결제일」과 「이용기간」을 보고 넣어 주세요. 결제를 등록할 때 첫 결제 달을 알아서 골라 줘요.<br>예) 이용기간이 「전월 4일 ~ 당월 3일」, 결제일이 15일이면 → 이용기간 마지막 날 3일, 결제일 15일 (8월 4일 ~ 9월 3일에 쓴 것이 9월 15일에 결제)<br>등록할 때 첫 결제 달을 직접 바꿀 수도 있어요.</p>
       <div class="tbl px"><table>
-        <thead><tr><th>카드</th><th>이 날짜까지 쓴 것 → 다음 달 결제</th></tr></thead>
+        <thead><tr><th>카드</th><th>결제일</th><th>이용기간 마지막 날</th><th class="hide-sm">이렇게 계산해요</th></tr></thead>
         <tbody id="card-rows"></tbody>
       </table></div>
       <p class="help" id="card-msg" style="margin-top:8px"></p>
@@ -269,7 +270,7 @@
       <div class="grid">
         <div class="field wide"><span>카드</span><div class="pick" id="pick-card"></div></div>
         <label class="field"><span>산 날</span><input name="date" type="date" required></label>
-        <label class="field"><span>금액 (원) <small>할부면 총 금액</small></span><input name="amount" inputmode="numeric" required autocomplete="off" placeholder="예: 300,000"></label>
+        <label class="field"><span>금액 (원) <small>할부면 총 금액</small></span><input name="amount" maxlength="60" required autocomplete="off" placeholder="예: 300,000 또는 3000+1500"></label>
         <label class="field wide"><span>어디서 · 무엇을</span><input name="merchant" maxlength="120" autocomplete="off" placeholder="예: 쿠팡 · 키보드"></label>
         <label class="field"><span>할부</span><select name="months"></select></label>
         <label class="field"><span>첫 결제 달 <small>카드 설정으로 자동</small></span><select name="first_month"></select></label>
@@ -301,7 +302,42 @@
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const won = (n) => `${Math.round(n).toLocaleString('ko-KR')}원`;
-  const num = (s) => { const t = String(s ?? '').replace(/[^\d.]/g, ''); const n = Math.round(Number(t)); return t && Number.isFinite(n) ? n : NaN; };
+  // 금액 칸 계산기: 「3000+1500」 → 4500. + − × ÷ 괄호, 쉼표, 「원」, 「3만」 「5천」 「3만5천」 도 됨. 못 읽으면 NaN
+  function num(s) {
+    const t = String(s ?? '').replace(/[\s,원₩]/g, '').replace(/[×xX]/g, '*').replace(/÷/g, '/').replace(/[−–]/g, '-');
+    if (!t || !/^[\d.+\-*/()만천백]+$/.test(t)) return NaN;
+    const toks = [];
+    for (let i = 0; i < t.length;) {
+      const m = t.slice(i).match(/^\d+(\.\d+)?/);
+      if (m) {
+        let v = Number(m[0]);
+        i += m[0].length;
+        const u = { 만: 10000, 천: 1000, 백: 100 }[t[i]];
+        if (u) { v *= u; i++; }
+        const prev = toks[toks.length - 1];
+        if (prev && prev.n != null) { toks.push({ o: '+' }); } // 3만5천 = 3만 + 5천
+        toks.push({ n: v });
+      } else if ('+-*/()'.includes(t[i])) { toks.push({ o: t[i] }); i++; }
+      else return NaN;
+    }
+    let p = 0;
+    const peek = () => toks[p] && toks[p].o;
+    function expr() { let v = term(); while (peek() === '+' || peek() === '-') { const o = toks[p++].o; const r = term(); v = o === '+' ? v + r : v - r; } return v; }
+    function term() { let v = factor(); while (peek() === '*' || peek() === '/') { const o = toks[p++].o; const r = factor(); v = o === '*' ? v * r : v / r; } return v; }
+    function factor() {
+      const tk = toks[p++];
+      if (!tk) return NaN;
+      if (tk.n != null) return tk.n;
+      if (tk.o === '-') return -factor();
+      if (tk.o === '+') return factor();
+      if (tk.o === '(') { const v = expr(); if (peek() !== ')') return NaN; p++; return v; }
+      return NaN;
+    }
+    const v = expr();
+    if (p !== toks.length || !Number.isFinite(v)) return NaN;
+    return Math.round(v);
+  }
+  const isFormula = (s) => /[+\-*/×÷x()만천백]/.test(String(s ?? '').replace(/^\s*-/, ''));
   const cfg = window.HUB_CONFIG || {};
   const sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 
@@ -316,7 +352,8 @@
   let purchases = [];
   let paid = new Set();      // 'YYYY-MM|card'
   let income = [];
-  const cutoff = { hyundai: 31, samsung: 31, shinhan: 31 };
+  const cutoff = { hyundai: 31, samsung: 31, shinhan: 31 }; // 이용기간 마지막 날 (31 = 말일)
+  const payDay = { hyundai: 14, samsung: 14, shinhan: 14 }; // 결제일
   let tab = 'month';
   let showDone = false;
 
@@ -336,7 +373,15 @@
   function firstMonthFor(card, date) {
     if (!date) return addMonth(thisMonth, 1);
     const day = Number(date.slice(8, 10));
-    return addMonth(ym(date), day <= (cutoff[card] || 31) ? 1 : 2);
+    return billMonth(card, ym(date), day);
+  }
+  // 이용기간: 「전월 (마지막 날+1)일 ~ 당월 마지막 날」 → 그 기간이 끝나는 달에 결제일이 마지막 날보다 뒤면 그 달, 아니면 다음 달
+  //   예) 마지막 날 3 · 결제일 15: 8월 4일 → 기간이 9월 3일에 끝남 → 9월 15일 결제
+  //   예) 마지막 날 말일 · 결제일 14: 8월 20일 → 기간이 8월 말에 끝남 → 9월 14일 결제
+  function billMonth(card, m, day) {
+    const c = cutoff[card] || 31;
+    const end = day <= c ? m : addMonth(m, 1);
+    return addMonth(end, (payDay[card] || 14) > c ? 0 : 1);
   }
 
   // 할부 나누기: 똑같이 나누고 나머지는 첫 달에
@@ -392,12 +437,12 @@
         fetchAll('budget_purchases', '*', 'date'),
         fetchAll('budget_paid', 'month, card', 'month'),
         fetchAll('budget_income', '*', 'month'),
-        fetchAll('budget_cards', 'card, cutoff_day', 'card'),
+        fetchAll('budget_cards', '*', 'card'),
       ]);
       purchases = ps.map(fix);
       paid = new Set(pd.map((r) => `${ym(r.month)}|${r.card}`));
       income = inc.map(fix);
-      cs.forEach((r) => (cutoff[r.card] = r.cutoff_day));
+      cs.forEach((r) => { cutoff[r.card] = r.cutoff_day; if (r.pay_day) payDay[r.card] = r.pay_day; });
     } catch (e) {
       if (missingTable(e)) { $('#setup').hidden = false; $('#main').hidden = true; return; }
       $('#err').textContent = `불러오지 못했어요: ${e.message}`;
@@ -449,7 +494,7 @@
       const x = s.cards[c];
       const isPaid = paid.has(`${month}|${c}`);
       return `<tr>
-        <td>${CARD_NAME[c]}</td>
+        <td>${CARD_NAME[c]} <small class="mute">${payDay[c]}일</small></td>
         <td class="num">${won(x.lump)}</td>
         <td class="num">${won(x.inst)}</td>
         <td class="num">${won(x.total)}</td>
@@ -550,10 +595,26 @@
       </tr>`).join('');
   }
 
+  // 카드 설정을 말로: 「8월 4일 ~ 9월 3일 사용 → 9월 15일 결제」 (이번 달 결제분 기준)
+  function cardExample(c) {
+    const cut = cutoff[c] || 31;
+    const pay = payDay[c] || 14;
+    const bill = thisMonth;
+    const end = addMonth(bill, pay > cut ? 0 : -1);
+    const md = (m, d) => `${Number(m.slice(5))}월 ${d}일`;
+    const from = cut === 31 ? md(end, 1) : md(addMonth(end, -1), cut + 1);
+    const to = cut === 31 ? `${Number(end.slice(5))}월 말일` : md(end, cut);
+    return `${from} ~ ${to} 사용 → ${md(bill, pay)} 결제`;
+  }
   function renderCards() {
-    const opts = (cur) => Array.from({ length: 31 }, (_, i) => i + 1).map((d) => `<option value="${d}" ${d === cur ? 'selected' : ''}>${d === 31 ? '말일 (그냥 다음 달)' : `매달 ${d}일`}</option>`).join('');
+    const dayOpts = (cur, last) => Array.from({ length: 31 }, (_, i) => i + 1).map((d) => `<option value="${d}" ${d === cur ? 'selected' : ''}>${d === 31 && last ? '말일' : `${d}일`}</option>`).join('');
     $('#card-rows').innerHTML = CARDS.map((c) => `
-      <tr><td>${CARD_NAME[c]}</td><td><span class="inline" style="margin:0"><select data-cutoff="${c}" aria-label="${CARD_NAME[c]} 기준일">${opts(cutoff[c])}</select></span></td></tr>`).join('');
+      <tr>
+        <td>${CARD_NAME[c]}</td>
+        <td><span class="inline" style="margin:0"><select data-pay="${c}" aria-label="${CARD_NAME[c]} 결제일">${dayOpts(payDay[c], false)}</select></span></td>
+        <td><span class="inline" style="margin:0"><select data-cutoff="${c}" aria-label="${CARD_NAME[c]} 이용기간 마지막 날">${dayOpts(cutoff[c], true)}</select></span></td>
+        <td class="hide-sm mute">${cardExample(c)}</td>
+      </tr>`).join('');
   }
 
   // ── 결제 체크 ─────────────────────────────────
@@ -578,6 +639,7 @@
     $('#inc-label').value = '';
     $('#inc-amount').value = '';
     $('#inc-err').textContent = '';
+    $('#inc-calc').textContent = '';
     $('#inc-save').textContent = '수입 추가';
     $('#inc-cancel').hidden = true;
   }
@@ -627,14 +689,22 @@
 
   // ── 카드 설정 ─────────────────────────────────
   $('#card-rows').addEventListener('change', async (e) => {
-    const s = e.target.closest('[data-cutoff]');
+    const s = e.target.closest('[data-cutoff], [data-pay]');
     if (!s) return;
-    const card = s.dataset.cutoff;
-    const day = Number(s.value);
-    const { error } = await sb.from('budget_cards').upsert({ card, cutoff_day: day }, { onConflict: 'user_id,card' });
-    if (error) return ($('#card-msg').textContent = `저장하지 못했어요: ${error.message}`);
-    cutoff[card] = day;
-    $('#card-msg').textContent = `${CARD_NAME[card]}: ${day === 31 ? '말일까지 쓴 것 → 다음 달 결제' : `매달 ${day}일까지 쓴 것 → 다음 달, 그 뒤는 다다음 달 결제`} 로 저장했어요. (이미 등록한 결제는 그대로예요)`;
+    const card = s.dataset.cutoff || s.dataset.pay;
+    const next = { cut: cutoff[card], pay: payDay[card] };
+    if (s.dataset.cutoff) next.cut = Number(s.value); else next.pay = Number(s.value);
+    const { error } = await sb.from('budget_cards').upsert({ card, cutoff_day: next.cut, pay_day: next.pay }, { onConflict: 'user_id,card' });
+    if (error) {
+      $('#card-msg').textContent = /pay_day/.test(error.message)
+        ? '결제일을 저장할 칸이 아직 없어요. app/budget/supabase/budget.sql 을 SQL Editor 에서 한 번 더 실행해 주세요.'
+        : `저장하지 못했어요: ${error.message}`;
+      return renderCards();
+    }
+    cutoff[card] = next.cut;
+    payDay[card] = next.pay;
+    renderCards();
+    $('#card-msg').textContent = `${CARD_NAME[card]} 저장했어요: ${cardExample(card)}. (이미 등록한 결제의 첫 결제 달은 그대로예요)`;
   });
 
   // ── 결제 등록 · 고치기 ───────────────────────
@@ -664,12 +734,15 @@
   function preview() {
     const amount = num(form.amount.value);
     const months = Number(form.months.value);
-    if (!Number.isFinite(amount) || amount <= 0) { $('#ed-preview').textContent = '금액을 넣으면 달마다 얼마씩 나가는지 보여줘요.'; return; }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      $('#ed-preview').textContent = form.amount.value.trim() ? '금액을 읽지 못했어요. 숫자와 + − × ÷ 만 써 주세요.' : '금액을 넣으면 달마다 얼마씩 나가는지 보여줘요.';
+      return;
+    }
     const sch = schedule({ amount, months, first_month: `${form.first_month.value}-01` });
     const last = sch[sch.length - 1];
-    $('#ed-preview').innerHTML = months === 1
+    $('#ed-preview').innerHTML = (isFormula(form.amount.value) ? `<b style="font-weight:400">= ${won(amount)}</b><br>` : '') + (months === 1
       ? `<b style="font-weight:400">${monthText(sch[0].month)}</b>에 ${CARD_NAME[card]}로 <b style="font-weight:400">${won(amount)}</b> 결제 (일시불)`
-      : `${monthText(sch[0].month)}부터 ${monthText(last.month)}까지 ${months}번, 한 달에 <b style="font-weight:400">${won(last.amount)}</b>${sch[0].amount !== last.amount ? ` (첫 달은 ${won(sch[0].amount)})` : ''}`;
+      : `${monthText(sch[0].month)}부터 ${monthText(last.month)}까지 ${months}번, 한 달에 <b style="font-weight:400">${won(last.amount)}</b>${sch[0].amount !== last.amount ? ` (첫 달은 ${won(sch[0].amount)})` : ''}`);
   }
 
   function openEdit(p) {
@@ -696,7 +769,15 @@
   form.date.addEventListener('change', () => { fillFirst(firstTouched ? form.first_month.value : null); preview(); });
   form.first_month.addEventListener('change', () => { firstTouched = true; preview(); });
   form.amount.addEventListener('input', preview);
-  form.amount.addEventListener('blur', () => { const n = num(form.amount.value); if (Number.isFinite(n) && n > 0) form.amount.value = n.toLocaleString('ko-KR'); });
+  // 칸을 벗어나면 계산 결과로 바꿔 둠 (3000+1500 → 4,500)
+  const settle = (el) => { const n = num(el.value); if (Number.isFinite(n) && n > 0) el.value = n.toLocaleString('ko-KR'); };
+  form.amount.addEventListener('blur', () => { settle(form.amount); preview(); });
+  $('#inc-amount').addEventListener('input', () => {
+    const v = $('#inc-amount').value;
+    const n = num(v);
+    $('#inc-calc').textContent = isFormula(v) ? (Number.isFinite(n) ? `= ${won(n)}` : '계산할 수 없어요') : '';
+  });
+  $('#inc-amount').addEventListener('blur', () => { settle($('#inc-amount')); $('#inc-calc').textContent = ''; });
   form.months.addEventListener('change', preview);
 
   async function save(more) {

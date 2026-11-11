@@ -52,13 +52,17 @@ create table if not exists budget_income (
 );
 create index if not exists budget_income_user on budget_income (user_id, month);
 
--- 카드별 설정: 매달 며칠까지 쓴 것이 다음 달에 결제되는지 (31 = 말일까지 = 그냥 다음 달)
+-- 카드별 설정: 이용기간 마지막 날(cutoff_day, 31 = 말일) + 결제일(pay_day)
+--   예) cutoff 3 · pay 15 → 8월 4일 ~ 9월 3일에 쓴 것이 9월 15일 결제
+--   예) cutoff 31 · pay 14 → 8월 1일 ~ 8월 31일에 쓴 것이 9월 14일 결제
 create table if not exists budget_cards (
   user_id     uuid not null default auth.uid() references auth.users(id) on delete cascade,
   card        text not null check (card in ('hyundai', 'samsung', 'shinhan')),
   cutoff_day  int not null default 31 check (cutoff_day between 1 and 31),
+  pay_day     int not null default 14 check (pay_day between 1 and 31),
   primary key (user_id, card)
 );
+alter table budget_cards add column if not exists pay_day int not null default 14 check (pay_day between 1 and 31);
 
 alter table budget_purchases enable row level security;
 alter table budget_paid      enable row level security;
