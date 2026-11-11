@@ -5,10 +5,10 @@
 <meta name="robots" content="noindex, nofollow">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0d0d0c" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eef8fa">
 <title>Task Manager · midorichart</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="icon" href="../../assets/favicon.png" type="image/png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.min.css">
 <link rel="stylesheet" href="../../assets/site.css?v=81784b6c">
 <style>
   /* 색·글꼴 기본값은 ../../assets/site.css, 여기는 Task Manager 전용 */
@@ -241,12 +241,150 @@
     .top h1 small { font-size: 12px; margin-left: 6px; }
     main { padding: 16px 16px 56px; }
   }
+
+  /* ================= 도트 · 청록 테마 =================
+     툴 모음 · 가계부 · 메시지함과 같은 모양. 위의 규칙(예전 둥근 테마)을 여기서 덮어쓴다.
+     다크 모드 없음: 기기 설정과 상관없이 늘 이 밝은 색. */
+  :root {
+    color-scheme: light;
+    --page: #eef8fa; --surface: #eef8fa; --surface-2: #d7eef2;
+    --ink: #26474f; --ink-2: #4d6c73; --mute: #89a3a8;
+    --line: rgba(38, 71, 79, 0.3); --line-2: #26474f;
+    --grid: #bcd9de; --axis: #89a3a8;
+    --accent: #42b7c9; --accent-soft: #d7eef2; --up: #2f8a4f; --down: #c63434;
+    --radius: 0px; --shadow: none; --px: 3px;
+    --sans: "Galmuri11", "Galmuri9", monospace;
+    --hdr: 106px; /* 붙어 있는 머리(제목 + 탭) 높이 */
+    --rule: #bcd9de; --rule-2: #cfe6ea; --red: #c63434; --red-soft: #f8e4e2;
+    --today: #42b7c9; --today-ink: #ffffff; --today-tint: rgba(66, 183, 201, 0.12);
+    --blk-bg: #d7eef2; --blk-ink: #26474f; --blk-line: #42b7c9;
+    --rt-bg: #dff0e0; --rt-ink: #2c5a3a; --rt-line: #2f8a4f;
+    --pxb: 0 calc(-1 * var(--px)) 0 0 var(--ink), 0 var(--px) 0 0 var(--ink), calc(-1 * var(--px)) 0 0 0 var(--ink), var(--px) 0 0 0 var(--ink);
+  }
+  *, *::before, *::after { border-radius: 0 !important; letter-spacing: 0 !important; }
+  body * { font-weight: 400 !important; }
+  body {
+    font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: none;
+    background-color: var(--page);
+    background-image: radial-gradient(color-mix(in srgb, var(--accent) 22%, transparent) 1px, transparent 1.4px);
+    background-size: 18px 18px;
+  }
+  :focus-visible { outline: var(--px) solid var(--accent); outline-offset: var(--px); }
+
+  /* 머리 */
+  .site-head { max-width: none; height: 58px; padding: 0 max(20px, calc((100vw - 1120px) / 2 + 24px)); background: var(--page); border-bottom: var(--px) solid var(--ink); }
+  .brand { font-size: 16px; }
+  .brand img { height: 34px; width: auto; display: block; }
+  .head-right { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .status { gap: 12px; font-size: 12px; white-space: nowrap; overflow: hidden; }
+  .status button, .hbtn { display: inline-flex; align-items: center; height: auto; margin: var(--px); padding: 3px 11px; border: 0; font: inherit; font-size: 12px; color: var(--ink); background: var(--page); box-shadow: var(--pxb); text-decoration: none; cursor: pointer; white-space: nowrap; }
+  .status button:hover, .hbtn:hover { background: var(--ink); color: var(--page); }
+  header { background: var(--page); backdrop-filter: none; border-bottom: var(--px) dashed var(--ink); }
+  .top { padding-top: 10px; }
+  .top h1 { font-size: 26px; line-height: 1.3; }
+  .navb { gap: 10px; padding-right: var(--px); }
+  .navb button { height: 30px; min-width: 30px; border: 0; background: var(--page); box-shadow: var(--pxb); font-size: 12px; }
+  .navb button:hover { background: var(--ink); color: var(--page); }
+  .navb button.arrow { font-size: 16px; }
+  .tabs { gap: 10px; padding-top: 12px; padding-bottom: 14px; }
+  .tabs button { height: 28px; padding: 0 12px; margin: var(--px) 0 var(--px) var(--px); font-size: 13px; color: var(--ink); background: var(--page); box-shadow: var(--pxb); }
+  .tabs button:hover { background: var(--ink); color: var(--page); }
+  .tabs button.active { background: var(--ink); color: var(--page); }
+  .hint, .memo-guide { font-size: 13px; }
+
+  /* 상자: 가는 선 + 그림자 대신 점 하나 굵기 테두리 */
+  .month, .tt, .rday, .card, .memo-pad, .modal { border: 0; box-shadow: var(--pxb); }
+  .month, .tt, .memo-pad { margin: var(--px); width: calc(100% - 2 * var(--px)); }
+  .month { background: var(--rule); }
+  .cell { background: var(--page); transition: none; }
+  .cell:hover { background: #fff; }
+  .cell.other { background: color-mix(in srgb, var(--surface-2) 55%, var(--page)); }
+  .cell .d { font-size: 12px; min-width: 22px; height: 22px; }
+  .chip { background: var(--surface-2); line-height: 1.5; }
+  .chip.overdue { background: var(--red-soft); }
+  .overdue-box { border: var(--px) solid var(--red); }
+  .dows div { font-size: 11px; }
+
+  .tt-head { background: var(--page); border-bottom: var(--px) solid var(--ink); }
+  .tt-head > div b { font-size: 18px; color: var(--ink); }
+  .tt-head > div.today { background: var(--accent); color: var(--today-ink); }
+  .tt-head > div.today b { color: var(--today-ink); }
+  .blk .bt { color: var(--ink); }
+  .bell { color: var(--ink-2); }
+
+  .memo-pad { background: #fff; font: 14px/1.9 var(--sans); }
+  .memo-pad:focus { outline: none; box-shadow: 0 0 0 var(--px) var(--accent); }
+  .routines { gap: 18px; padding: var(--px); }
+  .rday { background: var(--page); }
+  .rday h4, .colh h4 { font-size: 16px; }
+  .rday h4 { border-bottom: 2px solid var(--ink); }
+  .colh { border-bottom: 2px solid var(--ink); }
+  .doing .colh { border-bottom-color: var(--accent); }
+  .colh .n, .doing .colh .n { color: var(--ink); background: var(--surface-2); }
+  .doing .colh .n { background: var(--accent); color: #fff; }
+  .cards { gap: 16px; padding: var(--px); }
+  .card { background: var(--page); }
+  .doing .card { box-shadow: inset 5px 0 0 var(--accent), var(--pxb); padding-left: 20px; }
+  .card .ct { font-size: 14px; }
+  .card .cn { font-size: 12px; }
+  .board { gap: 0 34px; }
+
+  /* 버튼 */
+  .memo-save, .rform button, .qadd button, .actions .primary, .card .cact .go { border: 0; background: var(--accent); color: var(--today-ink); box-shadow: var(--pxb); }
+  .memo-save:hover, .rform button:hover, .qadd button:hover, .actions .primary:hover { background: var(--ink); color: var(--page); opacity: 1; }
+  .card .cact { gap: 8px; }
+  .card .cact .go { height: 24px; margin: var(--px); }
+  .doing .card .cact .go { background: var(--page); color: var(--ink); }
+  .card .cact .dn { border: 0; box-shadow: 0 0 0 2px var(--ink); color: var(--ink); height: 24px; }
+  .memo-save, .rform button, .qadd button { height: 30px; font-size: 13px; }
+  .rform { gap: 10px; }
+  .qadd { gap: 12px; padding: var(--px); }
+  .actions { gap: 12px; padding: 0 var(--px); }
+  .actions button { height: 32px; border: 0; background: var(--page); box-shadow: var(--pxb); font-size: 13px; }
+  .actions button:hover { background: var(--ink); color: var(--page); }
+  .actions .danger { box-shadow: none; }
+  .actions .danger:hover { background: var(--red); color: #fff; }
+  .linkbtn { box-shadow: none !important; }
+  .tag { height: 26px; margin: 2px; border: 0; background: var(--page); color: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
+  .tag:hover { background: var(--surface-2); }
+  .tag.on { background: var(--ink); color: var(--page); }
+  .tagbar { gap: 8px; }
+
+  /* 입력 칸 */
+  .rform input:not(.chk), .rform select, .qadd input, .sel,
+  .frow input[type=text], .frow input[type=time], .frow input[type=email], .frow input[type=password], .frow textarea {
+    border: 0; background: #fff; box-shadow: 0 0 0 2px var(--ink); font-size: 13px;
+  }
+  .rform input:not(.chk):focus, .rform select:focus, .qadd input:focus, .sel:focus, .frow input:focus, .frow textarea:focus {
+    outline: none; box-shadow: 0 0 0 var(--px) var(--accent);
+  }
+  .qadd input, .frow input[type=text], .frow input[type=time], .frow input[type=email], .frow input[type=password], .sel { height: 34px; }
+  .frow { gap: 12px; padding: 0 2px; }
+  .chk, .rform input.chk { border: 2px solid var(--ink); background: #fff; }
+  .chk:checked, .rform input.chk:checked { background: var(--accent); border-color: var(--ink); }
+  .chk:checked::after { left: 4px; top: 1px; }
+
+  /* 창 */
+  .overlay { background: color-mix(in srgb, #0d2228 70%, transparent); backdrop-filter: none; }
+  .modal { background: var(--page); padding: 22px 22px 24px; }
+  .modal h3 { font-size: 20px; }
+
+  @media (max-width: 640px) {
+    .site-head { padding: 0 16px; }
+    .brand img { height: 28px; }
+    .status { max-width: 46vw; }
+    :root { --hdr: 102px; }
+    .top h1 { font-size: 20px; }
+    .tabs { gap: 8px; }
+    .tabs button { padding: 0 9px; font-size: 12px; }
+    .chip { font-size: 10px; }
+  }
 </style>
 </head>
 <body>
 <nav class="site-head">
-  <a class="brand" href="../"><span class="brand-mark"></span>midorichart</a>
-  <div class="status" id="status"></div>
+  <a class="brand" href="../"><img src="../../assets/logo.png" alt="" width="508" height="512">midorichart</a>
+  <span class="head-right"><div class="status" id="status"></div><a class="hbtn" href="../">툴 모음</a></span>
 </nav>
 <header>
   <div class="top">

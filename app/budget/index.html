@@ -233,10 +233,10 @@
       </table></div>
     </details>
 
-    <!-- 지출 아래: 카드값 · 그냥 지출, 카드값 아래: 이 달 결제 · 할부 · 등록 내역 · 카드 설정 -->
+    <!-- 지출 아래: 카드값 · 지출(카드 말고 나가는 돈), 카드값 아래: 이 달 결제 · 할부 · 등록 내역 · 카드 설정 -->
     <nav class="tabs sub" id="exp-tabs" aria-label="지출">
       <button class="btn px" type="button" data-exp="card">카드값</button>
-      <button class="btn px" type="button" data-exp="ex">그냥 지출</button>
+      <button class="btn px" type="button" data-exp="ex">지출</button>
     </nav>
     <nav class="tabs sub2" id="card-subtabs" aria-label="카드값">
       <button class="btn sm px" type="button" data-cs="month">이 달 결제</button>
@@ -468,7 +468,7 @@
   const cutoff = { hyundai: 31, samsung: 31, shinhan: 31 }; // 이용기간 마지막 날 (31 = 말일)
   const payDay = { hyundai: 14, samsung: 14, shinhan: 14 }; // 결제일
   let top = 'exp';        // 큰 탭: inc 수입 · exp 지출 · sv 저축
-  let expSub = 'card';    // 지출 아래: card 카드값 · ex 그냥 지출
+  let expSub = 'card';    // 지출 아래: card 카드값 · ex 지출(카드 말고)
   let cardSub = 'month';  // 카드값 아래: month 이 달 결제 · inst 할부 · all 등록 내역 · cards 카드 설정
   let showDone = false;
 
@@ -587,7 +587,7 @@
   }
 
   // ── 그리기 ────────────────────────────────────
-  // 어떤 화면인지: 큰 탭(top) → 지출이면 카드값/그냥 지출(expSub) → 카드값이면 이 달 결제/할부/등록 내역/카드 설정(cardSub)
+  // 어떤 화면인지: 큰 탭(top) → 지출이면 카드값/지출(expSub) → 카드값이면 이 달 결제/할부/등록 내역/카드 설정(cardSub)
   const panelNow = () => (top === 'inc' ? 'inc' : top === 'sv' ? 'sv' : expSub === 'ex' ? 'ex' : cardSub);
   function render() {
     index();
@@ -631,14 +631,14 @@
     $('#t-inc').textContent = won(inc);
     $('#t-inc-sub').textContent = incomeOf(month).length ? `${incomeOf(month).length}개 항목` : '아직 안 적음';
     $('#t-exp').textContent = won(s.total + ex);
-    $('#t-exp-sub').textContent = `카드 ${won(s.total)} · 그냥 ${won(ex)}`;
+    $('#t-exp-sub').textContent = `카드 ${won(s.total)} · 지출 ${won(ex)}`;
     $('#t-sv').textContent = signed(sv);
     $('#t-sv-sub').textContent = `모은 돈 ${signed(savedUpTo(month))}`;
     const left = inc - s.total - ex - sv;
     $('#s-left').textContent = signed(left);
     $('#s-left').classList.toggle('minus', left < 0);
     $('#s-unpaid').textContent = unpaidCard + undoneEx
-      ? `아직 안 나간 돈 ${won(unpaidCard + undoneEx)} (카드 ${won(unpaidCard)} · 그냥 지출 ${won(undoneEx)})`
+      ? `아직 안 나간 돈 ${won(unpaidCard + undoneEx)} (카드 ${won(unpaidCard)} · 지출 ${won(undoneEx)})`
       : s.total + ex ? '이 달 카드값 · 지출 모두 나갔어요 ✔' : '';
     if ($('#year').open) renderYear();
   }
