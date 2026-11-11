@@ -99,6 +99,10 @@
   .empty { padding: 20px 0; text-align: center; color: var(--mute); font-size: 13px; }
   .red { color: var(--down); }
   tr.total.red td { color: var(--down); }
+  .tabs.sub { border-top: 0; padding-top: 0; margin: 0 0 8px; }
+  .tabs.sub .btn small { opacity: 0.75; margin-left: 4px; }
+  #due-rows tr[data-row] { cursor: pointer; }
+  #due-rows tr[data-row]:hover td { background: #fff; }
   .more { display: block; width: calc(100% - 2 * var(--px)); margin-top: 6px; }
 
   /* 할부 게이지: 개월 수만큼 칸, 낸 회차는 청록, 이 달은 진하게 */
@@ -183,6 +187,8 @@
   <div id="main" hidden>
     <nav class="tabs" aria-label="보기">
       <button class="btn px" type="button" data-tab="month" aria-pressed="true">월별 결제</button>
+      <button class="btn px" type="button" data-tab="ex" aria-pressed="false">지출</button>
+      <button class="btn px" type="button" data-tab="sv" aria-pressed="false">저축</button>
       <button class="btn px" type="button" data-tab="inst" aria-pressed="false">할부</button>
       <button class="btn px" type="button" data-tab="all" aria-pressed="false">등록 내역</button>
       <button class="btn px" type="button" data-tab="cards" aria-pressed="false">카드 설정</button>
@@ -212,39 +218,9 @@
         <tbody id="due-rows"></tbody>
       </table></div>
 
-      <div id="due-detail" style="margin-top:18px"></div>
-
-      <h2 class="label"><span>이 달 지출 <small>(카드 말고: 월세 · 이체 · 현금 …)</small></span><span id="ex-sum"></span></h2>
-      <div class="box px">
-        <p class="need-sql" id="ex-sql" hidden>지출을 저장할 표가 아직 없어요. app/budget/supabase/budget.sql 을 SQL Editor 에서 실행해 주세요.</p>
-        <table id="ex-table">
-          <thead><tr><th>날짜</th><th>항목</th><th class="num">금액</th><th class="num">상태</th></tr></thead>
-          <tbody id="ex-rows"></tbody>
-        </table>
-        <form class="inline" id="ex-form">
-          <input id="ex-date" type="date" required aria-label="지출 날짜">
-          <input id="ex-label" placeholder="항목 (예: 월세)" maxlength="60" aria-label="지출 항목">
-          <input id="ex-amount" placeholder="금액" maxlength="60" required autocomplete="off" aria-label="지출 금액" style="width:9em">
-          <small class="mute" id="ex-calc"></small>
-          <button class="btn primary px" type="submit" id="ex-save">지출 추가</button>
-          <button class="btn danger px" type="button" id="ex-del" hidden>삭제</button>
-          <button class="btn px" type="button" id="ex-cancel" hidden>취소</button>
-        </form>
-        <p class="err" id="ex-err" style="margin:6px 0 0"></p>
-      </div>
-
-      <h2 class="label"><span>저축</span><span id="sv-month"></span></h2>
-      <div class="box px">
-        <p class="need-sql" id="sv-sql" hidden>저축을 저장할 표가 아직 없어요. app/budget/supabase/budget.sql 을 SQL Editor 에서 실행해 주세요.</p>
-        <div class="save-total"><span class="mute" id="sv-total-label">이 달까지 모은 돈</span><b id="sv-total"></b><small class="mute" id="sv-note"></small></div>
-        <form class="inline" id="sv-form">
-          <span id="sv-label">이 달 저축</span>
-          <input id="sv-amount" placeholder="금액 (빼 쓴 달은 -50000)" maxlength="60" autocomplete="off" aria-label="이 달 저축 금액" style="width:14em">
-          <small class="mute" id="sv-calc"></small>
-          <button class="btn primary px" type="submit">저장</button>
-        </form>
-        <p class="err" id="sv-err" style="margin:6px 0 0"></p>
-      </div>
+      <h2 class="label"><span>카드별 내역</span><span>카드를 골라서 보기</span></h2>
+      <div class="tabs sub" id="card-tabs" role="tablist" aria-label="카드"></div>
+      <div id="due-detail"></div>
 
       <h2 class="label"><span>이 달 수입</span><span id="inc-sum"></span></h2>
       <div class="income px">
@@ -265,6 +241,52 @@
       <div class="tbl px"><table>
         <thead><tr><th>달</th><th class="num">수입</th><th class="num">카드</th><th class="num hide-sm">지출</th><th class="num hide-sm">저축</th><th class="num">남는 돈</th><th class="num">모은 돈</th><th class="num hide-sm">카드 결제</th></tr></thead>
         <tbody id="year-rows"></tbody>
+      </table></div>
+    </section>
+
+    <!-- 지출 -->
+    <section data-panel="ex" hidden>
+      <h2 class="label"><span id="ex-title">이 달 지출</span><span id="ex-sum"></span></h2>
+      <p class="help">카드 말고 나가는 돈(월세 · 이체 · 현금 …)을 적어요. 나가면 「지출 예정」을 눌러 「지출 완료」로 바꿔 주세요.</p>
+      <div class="box px">
+        <p class="need-sql" id="ex-sql" hidden>지출을 저장할 표가 아직 없어요. app/budget/supabase/budget.sql 을 SQL Editor 에서 실행해 주세요.</p>
+        <table id="ex-table">
+          <thead><tr><th>날짜</th><th>항목</th><th class="num">금액</th><th class="num">상태</th></tr></thead>
+          <tbody id="ex-rows"></tbody>
+        </table>
+        <form class="inline" id="ex-form">
+          <input id="ex-date" type="date" required aria-label="지출 날짜">
+          <input id="ex-label" placeholder="항목 (예: 월세)" maxlength="60" aria-label="지출 항목">
+          <input id="ex-amount" placeholder="금액" maxlength="60" required autocomplete="off" aria-label="지출 금액" style="width:9em">
+          <small class="mute" id="ex-calc"></small>
+          <button class="btn primary px" type="submit" id="ex-save">지출 추가</button>
+          <button class="btn danger px" type="button" id="ex-del" hidden>삭제</button>
+          <button class="btn px" type="button" id="ex-cancel" hidden>취소</button>
+        </form>
+        <p class="err" id="ex-err" style="margin:6px 0 0"></p>
+      </div>
+
+    </section>
+
+    <!-- 저축 -->
+    <section data-panel="sv" hidden>
+      <h2 class="label"><span id="sv-title">저축</span><span id="sv-month"></span></h2>
+      <div class="box px">
+        <p class="need-sql" id="sv-sql" hidden>저축을 저장할 표가 아직 없어요. app/budget/supabase/budget.sql 을 SQL Editor 에서 실행해 주세요.</p>
+        <div class="save-total"><span class="mute" id="sv-total-label">이 달까지 모은 돈</span><b id="sv-total"></b><small class="mute" id="sv-note"></small></div>
+        <form class="inline" id="sv-form">
+          <span id="sv-label">이 달 저축</span>
+          <input id="sv-amount" placeholder="금액 (빼 쓴 달은 -50000)" maxlength="60" autocomplete="off" aria-label="이 달 저축 금액" style="width:14em">
+          <small class="mute" id="sv-calc"></small>
+          <button class="btn primary px" type="submit">저장</button>
+        </form>
+        <p class="err" id="sv-err" style="margin:6px 0 0"></p>
+      </div>
+
+      <h2 class="label"><span>저축 기록</span><span>누르면 그 달로</span></h2>
+      <div class="tbl px"><table>
+        <thead><tr><th>달</th><th class="num">저축</th><th class="num">모은 돈</th></tr></thead>
+        <tbody id="sv-rows"></tbody>
       </table></div>
     </section>
 
@@ -407,6 +429,8 @@
   let hasEx = true;
   let hasSv = true;
   const expanded = new Set(); // 「더 보기」 를 펼친 카드
+  let cardTab = null;          // 카드별 내역에서 보고 있는 카드
+  let cardPicked = false;      // 직접 골랐으면 내역이 없는 달에도 그 카드 유지
   const cutoff = { hyundai: 31, samsung: 31, shinhan: 31 }; // 이용기간 마지막 날 (31 = 말일)
   const payDay = { hyundai: 14, samsung: 14, shinhan: 14 }; // 결제일
   let tab = 'month';
@@ -529,11 +553,13 @@
   // ── 그리기 ────────────────────────────────────
   function render() {
     index();
-    $('#month-label').textContent = `${monthText(month)} 결제`;
+    $('#month-label').textContent = tab === 'month' || tab === 'inst' ? `${monthText(month)} 결제` : monthText(month);
     $('#monthbar').hidden = tab === 'all' || tab === 'cards';
     $$('[data-tab]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
     $$('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== tab));
     if (tab === 'month') renderMonth();
+    if (tab === 'ex') renderExpenses();
+    if (tab === 'sv') renderSavings();
     if (tab === 'inst') renderInst();
     if (tab === 'all') renderAll();
     if (tab === 'cards') renderCards();
@@ -572,7 +598,7 @@
     $('#due-rows').innerHTML = CARDS.map((c) => {
       const x = s.cards[c];
       const isPaid = paid.has(`${month}|${c}`);
-      return `<tr>
+      return `<tr data-row="${c}" title="${CARD_NAME[c]} 내역 보기">
         <td>${CARD_NAME[c]} <small class="mute">${payDay[c]}일</small></td>
         <td class="num">${won(x.lump)}</td>
         <td class="num">${won(x.inst)}</td>
@@ -581,23 +607,21 @@
       </tr>`;
     }).join('') + `<tr class="total red"><td>합계</td><td class="num">${won(s.lump)}</td><td class="num">${won(s.inst)}</td><td class="num">${won(s.total)}</td><td></td></tr>`;
 
-    // 카드별 내역: 5개가 넘으면 접어 두고 「더 보기」
-    const FOLD = 5;
-    $('#due-detail').innerHTML = CARDS.filter((c) => s.cards[c].items.length).map((c) => {
-      const x = s.cards[c];
-      x.items.sort((a, b) => (a.p.months > 1) - (b.p.months > 1) || (a.p.date < b.p.date ? -1 : 1));
-      const open = expanded.has(c);
-      const shown = open ? x.items : x.items.slice(0, FOLD);
-      const rest = x.items.length - FOLD;
-      return `<div class="cardbox px">
-        <h3>${CARD_NAME[c]} <span class="mute" style="font-size:12px">${x.items.length}건</span> ${paid.has(`${month}|${c}`) ? '<span class="tag ok">결제함</span>' : ''}<span class="sum red">${won(x.total)}</span></h3>
+    // 카드별 내역: 카드 탭으로 하나씩. 고른 카드가 이 달에 없으면 내역 있는 첫 카드로
+    const withItems = CARDS.filter((c) => s.cards[c].items.length);
+    if (!cardTab || (!s.cards[cardTab].items.length && !cardPicked)) cardTab = withItems[0] || CARDS[0];
+    $('#card-tabs').innerHTML = CARDS.map((c) => `<button class="btn px" type="button" role="tab" data-cardtab="${c}" aria-pressed="${c === cardTab}" aria-selected="${c === cardTab}">${CARD_NAME[c]}<small>${s.cards[c].items.length}건</small></button>`).join('');
+    const FOLD = 5; // 5개가 넘으면 접어 두고 「더 보기」
+    const x = s.cards[cardTab];
+    x.items.sort((a, b) => (a.p.months > 1) - (b.p.months > 1) || (a.p.date < b.p.date ? -1 : 1));
+    const open = expanded.has(cardTab);
+    const shown = open ? x.items : x.items.slice(0, FOLD);
+    const rest = x.items.length - FOLD;
+    $('#due-detail').innerHTML = x.items.length ? `<div class="cardbox px">
+        <h3>${CARD_NAME[cardTab]} <span class="mute" style="font-size:12px">${monthText(month)} · ${payDay[cardTab]}일 결제</span> ${paid.has(`${month}|${cardTab}`) ? '<span class="tag ok">결제함</span>' : ''}<span class="sum red">${won(x.total)}</span></h3>
         <ul class="items">${shown.map(itemLine).join('')}</ul>
-        ${rest > 0 ? `<button class="btn sm px more" type="button" data-more="${c}">${open ? '접기 ▲' : `나머지 ${rest}개 더 보기 ▼`}</button>` : ''}
-      </div>`;
-    }).join('') || `<p class="empty">${monthText(month)}에 결제할 카드값이 없어요.</p>`;
-
-    renderExpenses();
-    renderSavings();
+        ${rest > 0 ? `<button class="btn sm px more" type="button" data-more="${cardTab}">${open ? '접기 ▲' : `나머지 ${rest}개 더 보기 ▼`}</button>` : ''}
+      </div>` : `<p class="empty">${monthText(month)}에 ${CARD_NAME[cardTab]}로 결제할 건 없어요.</p>`;
 
     // 수입
     const rows = incomeOf(month);
@@ -639,6 +663,7 @@
     const rows = expensesOf(month);
     const done = rows.filter((e) => e.done).reduce((t, e) => t + e.amount, 0);
     const total = rows.reduce((t, e) => t + e.amount, 0);
+    $('#ex-title').textContent = `${monthText(month)} 지출`;
     $('#ex-sum').textContent = rows.length ? `${won(total)} (완료 ${won(done)} · 예정 ${won(total - done)})` : '';
     $('#ex-table').hidden = !rows.length;
     $('#ex-rows').innerHTML = rows.map((e) => `
@@ -664,9 +689,17 @@
     $('#sv-total').textContent = signed(savedUpTo(month));
     const planned = [...savings].filter(([k]) => k > thisMonth && k <= month).reduce((t, [, v]) => t + v, 0);
     $('#sv-note').textContent = future && planned ? `(앞으로 할 저축 ${signed(planned)} 포함)` : '';
-    $('#sv-month').textContent = sv0(month);
+    $('#sv-title').textContent = `${monthText(month)} 저축`;
+    $('#sv-month').textContent = savings.has(month) ? `이 달 ${future ? '예정 ' : ''}${signed(savingOf(month))}` : '';
+    // 저축 기록: 고른 달 앞뒤 12개월
+    const ms = Array.from({ length: 12 }, (_, i) => addMonth(month, i - 5));
+    $('#sv-rows').innerHTML = ms.map((m) => `
+      <tr class="click ${m === month ? 'on' : ''}" data-m="${m}">
+        <td>${shortMonth(m)}${m === thisMonth ? ' <span class="mute">(이번 달)</span>' : m > thisMonth && savings.has(m) ? ' <span class="mute">(예정)</span>' : ''}</td>
+        <td class="num">${savings.has(m) ? signed(savingOf(m)) : '<span class="mute">-</span>'}</td>
+        <td class="num">${signed(savedUpTo(m))}</td>
+      </tr>`).join('');
   }
-  const sv0 = (m) => (savings.has(m) ? `이 달 ${m > thisMonth ? '예정 ' : ''}${signed(savingOf(m))}` : '');
 
   function renderInst() {
     const list = purchases.filter((p) => p.months > 1).map((p) => {
@@ -769,6 +802,17 @@
     expanded.has(c) ? expanded.delete(c) : expanded.add(c);
     render();
   }, true);
+  // 카드 탭 · 카드별 결제예정 표의 카드 줄을 누르면 그 카드 내역
+  const pickCard = (c) => { cardTab = c; cardPicked = true; render(); };
+  $('#card-tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-cardtab]'); if (b) pickCard(b.dataset.cardtab); });
+  $('#due-rows').addEventListener('click', (e) => {
+    if (e.target.closest('[data-paid]')) return;
+    const tr = e.target.closest('[data-row]');
+    if (!tr) return;
+    pickCard(tr.dataset.row);
+    $('#card-tabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  $('#sv-rows').addEventListener('click', (e) => { const r = e.target.closest('[data-m]'); if (r) go(r.dataset.m); });
 
   // ── 지출 ─────────────────────────────────────
   let exEditing = null;
