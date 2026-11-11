@@ -64,11 +64,12 @@ a { color: inherit; }
 .nav a:hover { background: var(--accent); color: var(--accent-ink); }
 .nav { align-items: center; }
 .langs { display: inline-flex; margin-left: 10px; box-shadow: 0 0 0 2px var(--ink); }
+.admin + .langs { margin-left: 14px; }
 .langs button { font: inherit; font-size: 12px; padding: 1px 7px; border: 0; background: var(--paper); color: var(--ink-2); cursor: pointer; }
 .langs button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .langs button:hover { color: var(--ink); }
 /* 관리자 버튼 (로그인했을 때만): 도구 · 메시지 · 톱니바퀴(포트폴리오 편집) */
-.admin { display: inline-flex; align-items: center; gap: 4px; margin-left: 10px; }
+.admin { display: inline-flex; align-items: center; gap: 10px; margin-left: 14px; }
 .nav .adm { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; font-size: 12px; text-decoration: none; background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 2px var(--ink); }
 .nav .adm:hover { background: var(--ink); color: var(--paper); }
 .adm svg { width: 13px; height: 13px; fill: currentColor; shape-rendering: crispEdges; display: block; }
@@ -343,7 +344,8 @@ a { color: inherit; }
   .langs button { padding: 1px 5px; font-size: 11px; }
   .brand img { height: 28px; }
   /* 휴대폰: 관리자 버튼은 그림만 */
-  .admin { margin-left: 6px; gap: 3px; }
+  .admin { margin-left: 7px; gap: 6px; }
+  .admin + .langs { margin-left: 7px; }
   .nav .adm { padding: 3px 5px; }
   .adm > span { display: none; }
   .v-strip button { width: 56px; }
