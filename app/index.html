@@ -86,10 +86,11 @@
 </head>
 <body>
 <header class="site-head">
-  <a class="brand" href="./"><img src="../assets/logo.png" alt="" width="508" height="512">midorichart</a>
+  <a class="brand" href="/"><img src="../assets/logo.png" alt="" width="508" height="512">midorichart</a>
   <span class="head-meta">
     <span id="today"></span>
     <span class="who" id="who" hidden></span>
+    <a class="btn px" href="/">사이트로</a>
     <button class="btn px" id="logout" type="button" hidden>로그아웃</button>
   </span>
 </header>
@@ -107,12 +108,12 @@
 
 <main class="wrap" id="apps" hidden>
   <section class="intro">
-    <h1>툴 모음<br><span>일정 · 공부 · 매출 · 가계부</span></h1>
+    <h1>툴 모음<br><span>일정 · 매출 · 가계부</span></h1>
     <p>매일 쓰는 개인 툴이에요.</p>
   </section>
 
   <section>
-    <h2 class="section-label"><span>앱</span><span>6</span></h2>
+    <h2 class="section-label"><span>앱</span><span>3</span></h2>
     <ul class="apps">
       <li>
         <a class="app px" href="tasks/">
@@ -130,21 +131,6 @@
         </a>
       </li>
       <li>
-        <a class="app px" href="study/">
-          <div class="app-top">
-            <span class="app-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15.5H5.5A1.5 1.5 0 0 1 4 18z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15.5h5.5a1.5 1.5 0 0 0 1.5-1.5z"/><path d="M7 8h1.5M15.5 8H17"/></svg>
-            </span>
-          </div>
-          <h2>학습 대시보드</h2>
-          <p>일본어 · 영어 단어장과 시험지, 수학 · 물리 · 화학 개념과 오답노트를 한곳에서 공부해요.</p>
-          <div class="app-foot">
-            <span>공부 · 단어장</span>
-            <b aria-hidden="true">▶</b>
-          </div>
-        </a>
-      </li>
-      <li>
         <a class="app px" href="sales/">
           <div class="app-top">
             <span class="app-icon" aria-hidden="true">
@@ -155,36 +141,6 @@
           <p>BOOTH 주문을 모아 기간별 매출, 상품별 판매, 최근 주문을 보여줘요.</p>
           <div class="app-foot">
             <span>매출 · 통계</span>
-            <b aria-hidden="true">▶</b>
-          </div>
-        </a>
-      </li>
-      <li>
-        <a class="app px" href="inbox/">
-          <div class="app-top">
-            <span class="app-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16v11H9l-4 3.5v-3.5H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>
-            </span>
-          </div>
-          <h2>메시지함</h2>
-          <p>midorichart.com 첫 화면의 메시지 창으로 온 문의를 모아 봐요. 새 메시지는 디스코드로도 알려줘요.</p>
-          <div class="app-foot">
-            <span id="inbox-unread">문의 · 메시지</span>
-            <b aria-hidden="true">▶</b>
-          </div>
-        </a>
-      </li>
-      <li>
-        <a class="app px" href="portfolio/">
-          <div class="app-top">
-            <span class="app-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path d="M3.5 16l5-5 4 4 3-3 5 5"/><circle cx="15.5" cy="9.5" r="1.4"/></svg>
-            </span>
-          </div>
-          <h2>포트폴리오 편집</h2>
-          <p>midorichart.com 연표의 배경 · 작업과 사진을 추가하고 고쳐요. 저장하면 바로 사이트에 나와요.</p>
-          <div class="app-foot">
-            <span>연표 · 사진</span>
             <b aria-hidden="true">▶</b>
           </div>
         </a>
@@ -214,7 +170,7 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=e3378918"></script>
+<script src="config.js?v=5b927cf1"></script>
 <script>
 (() => {
   const $ = (s) => document.querySelector(s);
@@ -234,12 +190,6 @@
     $('#who').hidden = $('#logout').hidden = !session;
     $('#who').textContent = session ? session.user.email : '';
     if (!session) $('#authEmail').focus();
-    // 메시지함 카드: 안 읽은 메시지 수 (표가 아직 없으면 그냥 둔다)
-    if (session) {
-      sb.from('contact_messages').select('id', { count: 'exact', head: true }).eq('read', false).then(({ count, error }) => {
-        if (!error && count) $('#inbox-unread').textContent = `안 읽은 메시지 ${count}개`;
-      });
-    }
   }
 
   let current; // 처음 한 번은 반드시 그리도록 undefined 로 시작

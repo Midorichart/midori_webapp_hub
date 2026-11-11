@@ -41,7 +41,7 @@ const UI = {
     side: '이 배경 전에 만든 것',
     mbTitle: 'MESSAGE', mbTo: '→ MIDORI', mbHello: '궁금한 점이나 작업 의뢰, 편하게 남겨 주세요!', mbName: '이름', mbAnon: '익명으로',
     mbNote: '여기에 입력하면 저에게 디스코드로 알림이 와요.', mbCancel: '취소',
-    adId: '관리자 로그인 — 이메일을 입력하세요.', adPw: '비밀번호를 입력하세요.', adWait: '로그인 중…', adOk: '로그인했어요. 관리자 페이지로 이동할게요.', adFail: '이메일 또는 비밀번호가 맞지 않아요. 다시 입력하세요.', adBye: '로그인을 취소했어요.',
+    adId: '관리자 로그인 — 이메일을 입력하세요.', adPw: '비밀번호를 입력하세요.', adWait: '로그인 중…', adOk: '로그인했어요. 오른쪽 위의 도구 · 메시지 · ⚙ 버튼을 쓰세요. 이 브라우저에서는 다음에도 로그인이 유지돼요.', adAlready: '이미 로그인돼 있어요. 오른쪽 위 버튼을 쓰세요. (로그아웃은 도구 페이지에서)', adFail: '이메일 또는 비밀번호가 맞지 않아요. 다시 입력하세요.', adBye: '로그인을 취소했어요.',
     mbBody: '메시지 (답장이 필요하면 메일이나 X 아이디도 함께)', mbSend: '보내기 ▶', mbSending: '보내는 중…', mbAnonName: '익명',
     mbThanks: '잘 받았어요! 확인하고 답장할게요. 연락처를 안 남기셨다면 답장은 어려워요.', mbSlow: '조금 뒤에 다시 보내 주세요.', mbFail: '못 보냈어요. midorichart@gmail.com 으로 메일 주세요.', soon: '다음 배경 준비 중', soonNote: (name) => `${name} 다음 배경을 만들고 있어요. 그 사이에 만든 것들은 오른쪽에.`, tape: '준비중', post: '작업 글 보기 (X) ↗', photos: (n) => `사진 ${n}장`, month: (m) => `${m}월`,
     view: (name) => `${name} 사진 보기`, close: '닫기', play: '▶ X 에서 영상 보기',
@@ -54,7 +54,7 @@ const UI = {
     side: 'この背景の前に作ったもの',
     mbTitle: 'MESSAGE', mbTo: '→ MIDORI', mbHello: 'ご質問やお仕事のご依頼など、お気軽にどうぞ！', mbName: 'お名前', mbAnon: '匿名で',
     mbNote: 'ここに入力すると、私にDiscordで通知が届きます。', mbCancel: 'キャンセル',
-    adId: '管理者ログイン — メールアドレスを入力してください。', adPw: 'パスワードを入力してください。', adWait: 'ログイン中…', adOk: 'ログインしました。管理ページに移動します。', adFail: 'メールアドレスまたはパスワードが違います。もう一度入力してください。', adBye: 'ログインをキャンセルしました。',
+    adId: '管理者ログイン — メールアドレスを入力してください。', adPw: 'パスワードを入力してください。', adWait: 'ログイン中…', adOk: 'ログインしました。右上のボタンから管理ページへ。このブラウザではログインが保持されます。', adAlready: 'すでにログインしています。右上のボタンを使ってください。', adFail: 'メールアドレスまたはパスワードが違います。もう一度入力してください。', adBye: 'ログインをキャンセルしました。',
     mbBody: 'メッセージ（返信が必要な場合はメールかXのIDも一緒に）', mbSend: '送信 ▶', mbSending: '送信中…', mbAnonName: '匿名',
     mbThanks: '受け取りました！確認してお返事します。連絡先がない場合はお返事できません。', mbSlow: '少し時間をおいてもう一度送ってください。', mbFail: '送信できませんでした。midorichart@gmail.com までメールでお願いします。', soon: '次の背景を準備中', soonNote: (name) => `${name} の次の背景を制作中です。その間に作ったものは右側に。`, tape: '準備中', post: '制作ポストを見る (X) ↗', photos: (n) => `写真 ${n}枚`, month: (m) => `${m}月`,
     view: (name) => `${name} の写真を見る`, close: '閉じる', play: '▶ Xで動画を見る',
@@ -67,7 +67,7 @@ const UI = {
     side: 'Made before this background',
     mbTitle: 'MESSAGE', mbTo: '→ MIDORI', mbHello: 'Questions or commissions? Leave a message anytime!', mbName: 'Name', mbAnon: 'Anonymous',
     mbNote: 'Messages sent here reach me as a Discord notification.', mbCancel: 'Cancel',
-    adId: 'Admin login — enter your email.', adPw: 'Enter your password.', adWait: 'Signing in…', adOk: 'Signed in. Taking you to the admin page.', adFail: 'Wrong email or password. Please try again.', adBye: 'Login cancelled.',
+    adId: 'Admin login — enter your email.', adPw: 'Enter your password.', adWait: 'Signing in…', adOk: 'Signed in. Use the buttons at the top right. You will stay signed in on this browser.', adAlready: 'Already signed in. Use the buttons at the top right.', adFail: 'Wrong email or password. Please try again.', adBye: 'Login cancelled.',
     mbBody: 'Message (add your email or X handle if you want a reply)', mbSend: 'Send ▶', mbSending: 'Sending…', mbAnonName: 'Anonymous',
     mbThanks: 'Got it, thank you! I will reply once I read it. Without contact info I cannot reply.', mbSlow: 'Please wait a moment and try again.', mbFail: 'Could not send. Please email midorichart@gmail.com instead.', soon: 'Next background in progress', soonNote: (name) => `Working on the next background after ${name}. Things made in the meantime are on the right.`, tape: 'COMING SOON', post: 'Work-in-progress post (X) ↗', photos: (n) => `${n} photos`, month: (m) => MONTHS_EN[m - 1],
     view: (name) => `View ${name} photos`, close: 'Close', play: '▶ Watch on X',
@@ -611,7 +611,38 @@ applyStatic();
 // ---------- 메시지 창 (첫 화면 오른쪽 · 휴대폰은 로고 바로 아래) ----------
 // Supabase 의 send_message() 함수만 부른다 (app/inbox/supabase/messages.sql). 받은 메시지는 /app/inbox/ 와 디스코드로.
 // 아래 키는 공개용(publishable) 키라 페이지에 있어도 되고, 이 키로는 메시지를 보내기만 할 수 있다.
-// 'admin' 을 보내면 메시지 대신 이 창에서 관리자 로그인 (이메일 → 비밀번호) 을 하고 /app/ 으로 간다.
+// 'admin' 을 보내면 메시지 대신 이 창에서 관리자 로그인 (이메일 → 비밀번호). 로그인하면 머리의 관리자 버튼이 켜진다.
+// supabase-js 는 관리자 로그인 · 관리자 버튼에만 필요해서, 그때만 불러온다.
+// 로그인 정보는 이 브라우저(localStorage)에 남아서 다음에 와도 로그인이 유지된다 (만료되면 자동으로 새로 받음).
+let supa = null;
+const loadSupabase = () => supa || (supa = new Promise((ok, fail) => {
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js';
+  s.onload = () => ok(window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } }));
+  s.onerror = () => { supa = null; fail(new Error('load')); };
+  document.head.append(s);
+}));
+const AUTH_KEY = 'sb-avnqsbwbmvwtpkquvrtt-auth-token'; // supabase-js 가 로그인 정보를 저장하는 곳
+const hasLogin = () => { try { return !!localStorage.getItem(AUTH_KEY); } catch { return false; } };
+
+// 관리자 버튼 (머리 오른쪽: 도구 · 메시지 · 톱니바퀴): 로그인돼 있을 때만 보이고, 안 읽은 메시지 수를 붙인다
+async function showAdmin() {
+  const el = $('#admin');
+  if (!el) return;
+  el.hidden = !hasLogin();
+  if (el.hidden) return;
+  try {
+    const sb = await loadSupabase();
+    const { data } = await sb.auth.getSession(); // 오래돼서 만료됐으면 여기서 새로 받아 둔다
+    if (!data.session) { el.hidden = true; return; }
+    const { count, error } = await sb.from('contact_messages').select('id', { count: 'exact', head: true }).eq('read', false);
+    const n = $('#adm-n');
+    n.hidden = !!error || !count;
+    n.textContent = count > 99 ? '99+' : String(count || '');
+  } catch {}
+}
+showAdmin();
+
 const MSG_API = `${SB_URL}/rest/v1/rpc/send_message`;
 const MSG_KEY = SB_KEY;
 (() => {
@@ -647,14 +678,6 @@ const MSG_KEY = SB_KEY;
     (m === 'pw' ? pw : body).focus();
   };
   cancel.addEventListener('click', () => { pw.value = ''; body.value = ''; status.textContent = ''; bubble(T().adBye, 'sys'); setMode('msg'); });
-  let supa = null;
-  const loadSupabase = () => supa || (supa = new Promise((ok, fail) => {
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js';
-    s.onload = () => ok(window.supabase.createClient(SB_URL, SB_KEY));
-    s.onerror = () => { supa = null; fail(new Error('load')); };
-    document.head.append(s);
-  }));
   async function adminStep() {
     if (mode === 'id') {
       email = body.value.trim();
@@ -675,7 +698,8 @@ const MSG_KEY = SB_KEY;
       if (error) throw error;
       status.textContent = '';
       bubble(T().adOk, 'them');
-      location.href = '/app/';
+      setMode('msg');
+      showAdmin();
     } catch {
       status.textContent = '';
       bubble(T().adFail, 'them');
@@ -692,6 +716,7 @@ const MSG_KEY = SB_KEY;
     if (text.toLowerCase() === 'admin') {
       body.value = '';
       bubble('admin', 'me');
+      if (hasLogin()) { bubble(T().adAlready, 'them'); showAdmin(); return; }
       bubble(T().adId, 'them');
       setMode('id');
       return;

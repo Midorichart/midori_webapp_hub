@@ -84,7 +84,7 @@ def stamp(path):
 
 def main():
     sys.stdout.reconfigure(newline=chr(10))  # 훅이 파일 이름을 읽을 때 끝에 CR 이 붙지 않게
-    changed = [p for p in files() if stamp(p)]
+    changed = [p for p in files() if p.exists() and stamp(p)]  # 지웠지만 아직 커밋 안 한 파일은 건너뜀
     for p in changed:
         print(p.relative_to(ROOT).as_posix())
     return 0

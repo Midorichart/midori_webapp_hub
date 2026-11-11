@@ -24,7 +24,7 @@
 <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.min.css">
-<link rel="stylesheet" href="../assets/portfolio.css?v=c6a758f0">
+<link rel="stylesheet" href="../assets/portfolio.css?v=487a86a1">
 <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
@@ -35,6 +35,12 @@
   <nav class="nav" aria-label="섹션">
     <a href="#backgrounds" data-t="timeline">年表</a>
     <a href="#contact" data-t="contact">連絡</a>
+    <!-- 관리자 버튼: 이 브라우저에 로그인돼 있을 때만 보인다 (portfolio.js). 로그인은 메시지 창에 'admin' -->
+    <span class="admin" id="admin" hidden>
+      <a class="adm" href="/app/" title="도구"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z"/></svg><span>도구</span></a>
+      <a class="adm" href="/app/inbox/" title="메시지함"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 2h14v9H7l-3 3v-3H1z"/></svg><span>메시지</span><b class="adm-n" id="adm-n" hidden></b></a>
+      <a class="adm gear" href="/app/portfolio/" title="포트폴리오 편집" aria-label="포트폴리오 편집"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M7 1h2v3H7zM7 12h2v3H7zM1 7h3v2H1zM12 7h3v2h-3zM3 3h2v2H3zM11 3h2v2h-2zM3 11h2v2H3zM11 11h2v2h-2zM4 4h8v8H4zM6.5 6.5v3h3v-3z"/></svg></a>
+    </span>
     <span class="langs" role="group" aria-label="Language">
       <button type="button" data-lang="ko">KO</button><button type="button" data-lang="ja">JA</button><button type="button" data-lang="en">EN</button>
     </span>
@@ -127,6 +133,6 @@
 </dialog>
 
 <script src="../assets/portfolio/works.js?v=0a953b51"></script>
-<script type="module" src="../assets/portfolio.js?v=da1b3064"></script>
+<script type="module" src="../assets/portfolio.js?v=f221c0dd"></script>
 </body>
 </html>
