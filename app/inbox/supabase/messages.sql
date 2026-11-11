@@ -148,7 +148,7 @@ begin
       body    := jsonb_build_object(
         'from', 'midorichart.com <onboarding@resend.dev>',
         'to', jsonb_build_array('midorichart@gmail.com'),
-        'subject', '[midorichart] 새 메시지 · ' || who,
+        'subject', '[midorichart] 새 메시지 · 작성자 : ' || who,
         'text', bd || E'\n\n— ' || who || coalesce(' · ' || nullif(lg, ''), '') || E'\nhttps://midorichart.com/app/inbox/'
       )
     );

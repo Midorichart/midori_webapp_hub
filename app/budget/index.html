@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script src="../auth.js?v=73d71f95"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef8fa">
+<meta name="robots" content="noindex, nofollow">
+<title>midorichart · 가계부</title>
+<link rel="icon" href="../../assets/favicon.png" type="image/png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.min.css">
+<style>
+  /* 툴 모음(/app/)과 같은 도트 · 청록 스타일 */
+  :root {
+    color-scheme: light;
+    --paper: #eef8fa; --paper-2: #d7eef2; --ink: #26474f; --ink-2: #4d6c73; --mute: #89a3a8;
+    --accent: #42b7c9; --accent-ink: #ffffff; --down: #c63434; --px: 3px;
+    --font: "Galmuri11", "Galmuri9", monospace;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+    color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.7; -webkit-font-smoothing: none;
+    background-color: var(--paper);
+    background-image: radial-gradient(color-mix(in srgb, var(--accent) 22%, transparent) 1px, transparent 1.4px);
+    background-size: 18px 18px;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: var(--px) solid var(--accent); outline-offset: var(--px); }
+  .px { box-shadow: 0 calc(-1 * var(--px)) 0 0 var(--ink), 0 var(--px) 0 0 var(--ink), calc(-1 * var(--px)) 0 0 0 var(--ink), var(--px) 0 0 0 var(--ink); }
+
+  .site-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 58px; padding: 0 max(20px, calc((100vw - 980px) / 2)); background: var(--paper); border-bottom: var(--px) solid var(--ink); }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-size: 16px; }
+  .brand img { height: 34px; width: auto; display: block; }
+  .wrap { width: 100%; max-width: 980px; margin: 0 auto; padding: 0 20px 60px; flex: 1; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; margin: var(--px); padding: 3px 11px; font: inherit; font-size: 12px; color: var(--ink); background: var(--paper); border: 0; cursor: pointer; text-decoration: none; white-space: nowrap; }
+  .btn:hover { background: var(--ink); color: var(--paper); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.primary:hover { background: var(--ink); color: var(--paper); }
+  .btn.danger:hover { background: var(--down); color: #fff; }
+  .btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .btn.sm { padding: 0 7px; font-size: 11px; }
+
+  .intro { padding: 40px 0 20px; display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .intro h1 { margin: 0; font-size: 30px; line-height: 1.3; font-weight: 400; }
+  .intro h1 span { color: var(--mute); font-size: 16px; margin-left: 10px; }
+  .intro p { margin: 4px 0 0; color: var(--ink-2); font-size: 13px; }
+  .tools { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+
+  .notice { margin: 0 0 18px; padding: 14px 18px; background: #fff; }
+  .notice p { margin: 0 0 10px; }
+  .notice code { padding: 0 4px; background: var(--paper-2); }
+  .err { color: var(--down); font-size: 12px; min-height: 18px; margin: 0 0 8px; }
+  .ok { color: var(--ink-2); font-size: 12px; }
+  .mute { color: var(--mute); }
+
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 14px; padding-top: 14px; border-top: var(--px) dashed var(--ink); }
+  .bar { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin: 0 0 16px; }
+  .month { display: inline-flex; align-items: center; }
+  .month b { min-width: 9.5em; text-align: center; font-weight: 400; font-size: 16px; }
+  .bar select, .bar input, .field input, .field select, .field textarea, .inline input, .inline select {
+    height: 30px; padding: 0 8px; font: inherit; font-size: 12px; color: var(--ink); background: #fff; border: 0; border-radius: 0; box-shadow: 0 0 0 2px var(--ink);
+  }
+  .bar input[type="search"] { width: 160px; }
+  .bar select:focus, .bar input:focus, .field input:focus, .field select:focus, .field textarea:focus, .inline input:focus, .inline select:focus { outline: none; box-shadow: 0 0 0 3px var(--accent); }
+  .bar .sum { margin-left: auto; color: var(--ink-2); font-size: 13px; }
+
+  /* 내역 */
+  .day { margin: 0 0 14px; }
+  .day-head { display: flex; justify-content: space-between; padding: 0 4px 2px; color: var(--mute); font-size: 12px; }
+  .txs { list-style: none; margin: 0; padding: 0; background: var(--paper); }
+  .tx { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 14px; align-items: center; padding: 7px 14px; cursor: pointer; border-top: 1px dashed var(--mute); }
+  .tx:first-child { border-top: 0; }
+  .tx:hover { background: #fff; }
+  .tx.out { opacity: 0.45; }
+  .tx-name { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; min-width: 0; }
+  .tx-name b { font-weight: 400; overflow-wrap: anywhere; }
+  .tx-memo { grid-column: 1; color: var(--ink-2); font-size: 12px; overflow-wrap: anywhere; }
+  .tx-amt { text-align: right; white-space: nowrap; font-size: 15px; }
+  .tx-amt.minus { color: var(--down); }
+  .tx-meta { grid-column: 2; text-align: right; color: var(--mute); font-size: 11px; white-space: nowrap; }
+  .tag { display: inline-block; padding: 0 5px; font-size: 11px; line-height: 1.6; background: var(--paper-2); color: var(--ink-2); white-space: nowrap; }
+  .tag.cat { background: var(--accent); color: var(--accent-ink); }
+  .tag.none { background: transparent; box-shadow: inset 0 0 0 1px var(--mute); color: var(--mute); }
+  .tag.warn { background: var(--down); color: #fff; }
+  .empty { padding: 40px 0; text-align: center; color: var(--mute); }
+
+  /* 통계 */
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-bottom: 22px; }
+  .stat { margin: var(--px); padding: 12px 16px; background: var(--paper); }
+  .stat span { display: block; color: var(--mute); font-size: 12px; }
+  .stat b { display: block; font-weight: 400; font-size: 22px; line-height: 1.4; }
+  .stat small { color: var(--ink-2); font-size: 11px; }
+  h2.label { display: flex; justify-content: space-between; gap: 10px; margin: 26px 0 10px; font-size: 13px; font-weight: 400; color: var(--mute); }
+  .rows { list-style: none; margin: 0; padding: 12px 16px; background: var(--paper); }
+  .row { display: grid; grid-template-columns: 8.5em minmax(0, 1fr) 7.5em; gap: 10px; align-items: center; padding: 3px 0; cursor: pointer; }
+  .row:hover .row-name { text-decoration: underline; }
+  .row-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row-bar { height: 12px; background: var(--paper-2); }
+  .row-bar i { display: block; height: 100%; background: var(--accent); }
+  .row-val { text-align: right; white-space: nowrap; font-size: 13px; }
+  .row-val small { display: block; color: var(--mute); font-size: 10px; line-height: 1.2; }
+  .chart { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; align-items: end; height: 190px; padding: 14px 16px 8px; background: var(--paper); }
+  .col { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; cursor: pointer; text-align: center; }
+  .col i { display: block; background: var(--paper-2); min-height: 2px; }
+  .col.on i { background: var(--accent); }
+  .col:hover i { background: var(--ink-2); }
+  .col span { font-size: 10px; color: var(--mute); padding-top: 3px; }
+  .col em { font-style: normal; font-size: 9px; color: var(--ink-2); white-space: nowrap; overflow: hidden; }
+
+  /* 할부 */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { font-weight: 400; color: var(--mute); font-size: 11px; text-align: left; padding: 4px 8px; border-bottom: 2px solid var(--ink); }
+  td { padding: 6px 8px; border-bottom: 1px dashed var(--mute); vertical-align: top; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  tr.click { cursor: pointer; }
+  tr.click:hover td { background: #fff; }
+  .tbl { padding: 6px 10px; background: var(--paper); overflow-x: auto; }
+
+  /* 분류 규칙 */
+  .inline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 14px; }
+  .rule-group { margin: 0 0 12px; padding: 10px 14px; background: var(--paper); }
+  .rule-group h3 { margin: 0 0 6px; font-size: 14px; font-weight: 400; }
+  .rule-group h3 small { color: var(--mute); font-size: 11px; margin-left: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; background: #fff; box-shadow: 0 0 0 1px var(--ink-2); font-size: 12px; }
+  .chip button { font: inherit; font-size: 12px; border: 0; background: transparent; color: var(--ink); cursor: pointer; padding: 1px 6px; }
+  .chip button:hover { background: var(--ink); color: var(--paper); }
+  .chip button.x { color: var(--mute); padding: 1px 5px; }
+  .chip button.x:hover { background: var(--down); color: #fff; }
+
+  /* 창 */
+  dialog { width: min(980px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; border: 0; color: var(--ink); background: var(--paper); }
+  dialog.small { width: min(560px, calc(100vw - 24px)); }
+  dialog::backdrop { background: color-mix(in srgb, #0d2228 70%, transparent); }
+  .ed-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 14px; background: var(--ink); color: var(--paper); }
+  .ed-head b { font-weight: 400; }
+  .ed-body { padding: 18px 20px 6px; }
+  .ed-foot { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 16px; background: var(--paper); border-top: var(--px) solid var(--ink); }
+  .ed-foot .err { margin: 0; flex: 1; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
+  .grid .wide { grid-column: 1 / -1; }
+  .field { display: block; min-width: 0; }
+  .field > span { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+  .field > span small { color: var(--mute); }
+  .field input, .field select, .field textarea { width: 100%; height: 34px; font-size: 13px; }
+  .field textarea { height: auto; min-height: 64px; padding: 6px 9px; resize: vertical; line-height: 1.6; }
+  .checks { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; }
+  .checks label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+  .src { margin: 12px 0 4px; color: var(--mute); font-size: 11px; }
+
+  .drop { display: grid; place-items: center; min-height: 120px; margin: var(--px); padding: 14px; text-align: center; color: var(--ink-2); font-size: 12px; background: var(--paper-2); cursor: pointer; }
+  .drop.over { background: var(--accent); color: var(--accent-ink); }
+  .job { margin: 18px 0; padding: 12px 14px; background: #fff; }
+  .job-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin-bottom: 8px; }
+  .job-head b { font-weight: 400; overflow-wrap: anywhere; }
+  .maps { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 12px; margin: 8px 0 10px; }
+  .maps .field select { height: 28px; font-size: 12px; }
+  .job table { font-size: 12px; }
+  .job td { padding: 3px 6px; }
+  .job .result { margin-top: 6px; font-size: 12px; }
+  .help { color: var(--ink-2); font-size: 12px; margin: 0 0 6px; }
+
+  .site-foot { display: flex; justify-content: space-between; max-width: 980px; width: 100%; margin: 0 auto; padding: 18px 20px 36px; color: var(--mute); font-size: 11px; }
+  .site-foot a { text-decoration: none; }
+  @media (max-width: 640px) {
+    .brand img { height: 28px; }
+    .intro h1 { font-size: 24px; }
+    .cards { grid-template-columns: 1fr; gap: 10px; }
+    .row { grid-template-columns: 6.5em minmax(0, 1fr) 6.5em; }
+    .grid { grid-template-columns: 1fr; }
+    .ed-body { padding: 14px 14px 6px; }
+    .bar .sum { margin-left: 0; width: 100%; }
+    .bar input[type="search"] { width: 100%; }
+    .chart { gap: 3px; padding: 10px 8px 6px; }
+    .col em { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="site-head">
+  <a class="brand" href="../"><img src="../../assets/logo.png" alt="" width="508" height="512">midorichart</a>
+  <a class="btn px" href="../">툴 모음</a>
+</header>
+
+<main class="wrap">
+  <section class="intro">
+    <div>
+      <h1>가계부<span id="count"></span></h1>
+      <p>카드사 이용내역 엑셀을 올리면 자동으로 분류해서 모아요. 산 물건은 메모에 적어 두세요.</p>
+    </div>
+    <div class="tools">
+      <button class="btn primary px" type="button" id="open-import">엑셀 올리기</button>
+      <button class="btn px" type="button" id="open-new">+ 직접 입력</button>
+    </div>
+  </section>
+
+  <div class="notice px" id="setup" hidden>
+    <p><b>아직 준비가 안 됐어요.</b> Supabase → SQL Editor 에서 <code>app/budget/supabase/budget.sql</code> 을 실행해 주세요.</p>
+    <button class="btn px" type="button" id="retry">다시 확인</button>
+  </div>
+  <p class="err" id="err"></p>
+
+  <div id="main" hidden>
+    <nav class="tabs" aria-label="보기">
+      <button class="btn px" type="button" data-tab="list" aria-pressed="true">내역</button>
+      <button class="btn px" type="button" data-tab="stats" aria-pressed="false">월별 · 분류별</button>
+      <button class="btn px" type="button" data-tab="inst" aria-pressed="false">할부</button>
+      <button class="btn px" type="button" data-tab="rules" aria-pressed="false">분류 규칙</button>
+    </nav>
+
+    <div class="bar" id="monthbar">
+      <span class="month">
+        <button class="btn px" type="button" id="prev" aria-label="이전 달">◀</button>
+        <b id="month-label"></b>
+        <button class="btn px" type="button" id="next" aria-label="다음 달">▶</button>
+      </span>
+      <button class="btn px" type="button" id="all-time" aria-pressed="false">전체 기간</button>
+    </div>
+
+    <!-- 내역 -->
+    <section data-panel="list">
+      <div class="bar">
+        <select id="f-card" aria-label="카드"></select>
+        <select id="f-cat" aria-label="분류"></select>
+        <input type="search" id="f-q" placeholder="가맹점 · 메모 찾기" aria-label="찾기">
+        <span class="sum" id="list-sum"></span>
+      </div>
+      <div id="list"></div>
+      <p class="empty" id="list-empty" hidden>이 기간에 내역이 없어요.</p>
+    </section>
+
+    <!-- 월별 · 분류별 -->
+    <section data-panel="stats" hidden>
+      <div class="cards">
+        <div class="stat px"><span id="s-total-label">이번 달 쓴 돈</span><b id="s-total"></b><small id="s-diff"></small></div>
+        <div class="stat px"><span>결제 건수</span><b id="s-count"></b><small id="s-cancel"></small></div>
+        <div class="stat px"><span>하루 평균</span><b id="s-avg"></b><small id="s-days"></small></div>
+      </div>
+      <h2 class="label"><span>분류별</span><span>누르면 그 분류 내역으로</span></h2>
+      <ul class="rows px" id="s-cats"></ul>
+      <h2 class="label"><span>카드별</span></h2>
+      <ul class="rows px" id="s-cards"></ul>
+      <h2 class="label"><span>최근 12개월</span><span>누르면 그 달로</span></h2>
+      <div class="chart px" id="s-chart"></div>
+      <p class="help" style="margin-top:10px">이용일 기준 합계예요. 할부는 산 날에 전체 금액으로 들어가고, 취소는 취소된 날에 빠져요. 「합계에서 빼기」 한 줄은 안 셉니다.</p>
+    </section>
+
+    <!-- 할부 -->
+    <section data-panel="inst" hidden>
+      <div class="cards">
+        <div class="stat px"><span>이번 달 청구될 할부금 (추정)</span><b id="i-month"></b><small id="i-month-n"></small></div>
+        <div class="stat px"><span>앞으로 남은 할부금 (추정)</span><b id="i-left"></b><small id="i-left-n"></small></div>
+        <div class="stat px"><span>할부로 산 것 (전체)</span><b id="i-all"></b><small id="i-all-n"></small></div>
+      </div>
+      <div class="bar">
+        <button class="btn px" type="button" id="i-done" aria-pressed="false">끝난 할부도 보기</button>
+        <span class="sum">산 다음 달부터 매달 똑같이 나눠 낸다고 보고 계산한 추정치예요. 정확한 금액은 카드사 명세서를 확인하세요.</span>
+      </div>
+      <div class="tbl px"><table>
+        <thead><tr><th>산 날</th><th>가맹점 · 메모</th><th class="num">금액</th><th class="num">개월</th><th class="num">한 달에 약</th><th class="num">진행 (추정)</th><th class="num">끝나는 달</th></tr></thead>
+        <tbody id="i-rows"></tbody>
+      </table></div>
+      <p class="empty" id="i-empty" hidden>할부 내역이 없어요.</p>
+    </section>
+
+    <!-- 분류 규칙 -->
+    <section data-panel="rules" hidden>
+      <p class="help">가맹점명에 「단어」가 들어 있으면 그 분류로 자동 정리해요. 띄어쓰기 · 대소문자는 무시하고, 여러 개가 맞으면 더 긴 단어가 이겨요 (예: 「이마트24」 가 「이마트」 보다 먼저).</p>
+      <form class="inline" id="rule-form">
+        <input id="r-key" placeholder="단어 (예: 스타벅스)" maxlength="60" required aria-label="단어">
+        <span class="mute">→</span>
+        <input id="r-cat" placeholder="분류 (예: 카페·간식)" maxlength="30" list="cat-list" required aria-label="분류">
+        <button class="btn primary px" type="submit">규칙 추가</button>
+        <span style="flex:1"></span>
+        <button class="btn px" type="button" id="r-defaults">기본 규칙 넣기</button>
+        <button class="btn px" type="button" id="r-apply">규칙 다시 적용</button>
+      </form>
+      <p class="ok" id="r-msg"></p>
+      <h2 class="label"><span>분류 안 된 가맹점</span><span>누르면 위 칸에 채워져요</span></h2>
+      <div class="rule-group px"><div class="chips" id="r-uncat"></div></div>
+      <h2 class="label"><span>규칙</span><span>단어를 누르면 분류를 바꿔요</span></h2>
+      <div id="r-list"></div>
+    </section>
+  </div>
+</main>
+
+<datalist id="cat-list"></datalist>
+
+<!-- 엑셀 올리기 -->
+<dialog id="imp" aria-label="엑셀 올리기">
+  <div class="ed-head"><b>카드 이용내역 엑셀 올리기</b><button class="btn px" type="button" id="imp-x">닫기 ✕</button></div>
+  <div class="ed-body">
+    <p class="help">현대 · 신한 · 삼성카드 홈페이지에서 받은 이용내역 파일(.xls · .xlsx · .csv)을 올려 주세요. 여러 개를 한꺼번에 올려도 되고, 이미 올린 기간을 다시 올려도 같은 내역은 한 번만 들어가요.</p>
+    <label class="drop" id="drop">
+      <span>여기에 파일을 끌어다 놓거나 눌러서 고르기<br><small>파일은 이 브라우저 안에서만 읽어요. 서버에는 읽어 낸 내역만 저장돼요.</small></span>
+      <input type="file" id="files" accept=".xls,.xlsx,.csv,.htm,.html" multiple hidden>
+    </label>
+    <div id="jobs"></div>
+  </div>
+  <div class="ed-foot">
+    <p class="err" id="imp-err"></p>
+    <span>
+      <button class="btn px" type="button" id="imp-cancel">닫기</button>
+      <button class="btn primary px" type="button" id="imp-go" disabled>가져오기</button>
+    </span>
+  </div>
+</dialog>
+
+<!-- 한 줄 편집 -->
+<dialog id="ed" class="small" aria-label="내역 편집">
+  <form id="ed-form" method="dialog" novalidate>
+    <div class="ed-head"><b id="ed-title">내역</b><button class="btn px" type="button" id="ed-x">닫기 ✕</button></div>
+    <div class="ed-body">
+      <div class="grid">
+        <label class="field"><span>이용일</span><input name="date" type="date" required></label>
+        <label class="field"><span>금액 (원)</span><input name="amount" inputmode="numeric" required autocomplete="off"></label>
+        <label class="field wide"><span>가맹점 · 쓴 곳</span><input name="merchant" maxlength="120" autocomplete="off"></label>
+        <label class="field"><span>카드</span><select name="card"></select></label>
+        <label class="field"><span>카드 끝자리 <small>(선택)</small></span><input name="card_last4" maxlength="4" inputmode="numeric" autocomplete="off"></label>
+        <label class="field"><span>할부</span><select name="installment"></select></label>
+        <label class="field"><span>분류 <small>비우면 규칙으로 자동</small></span><input name="category" maxlength="30" list="cat-list" autocomplete="off"></label>
+        <label class="field wide"><span>메모 <small>산 물건 등</small></span><textarea name="memo" maxlength="500" rows="2"></textarea></label>
+        <div class="checks wide">
+          <label><input type="checkbox" name="is_cancel"> 취소 · 환불 (빼기)</label>
+          <label><input type="checkbox" name="is_overseas"> 해외 결제</label>
+          <label><input type="checkbox" name="excluded"> 합계에서 빼기 <span class="mute">(회사 경비 등)</span></label>
+          <label><input type="checkbox" name="make_rule"> 이 가맹점은 앞으로도 이 분류로 (규칙 추가)</label>
+        </div>
+      </div>
+      <p class="src" id="ed-src"></p>
+    </div>
+    <div class="ed-foot">
+      <button class="btn danger px" type="button" id="ed-del">삭제</button>
+      <p class="err" id="ed-err"></p>
+      <span>
+        <button class="btn px" type="button" id="ed-cancel">취소</button>
+        <button class="btn primary px" type="submit" id="ed-save">저장</button>
+      </span>
+    </div>
+  </form>
+</dialog>
+
+<footer class="site-foot">
+  <span>본인만 볼 수 있어요 (로그인 + 행 단위 보안)</span>
+  <a href="/">midorichart.com</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="../config.js?v=e3378918"></script>
+<script src="parse.js?v=c0eb65e2"></script>
+<script>
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const won = (n) => `${Math.round(n).toLocaleString('ko-KR')}원`;
+  const P = window.BudgetParse;
+  const cfg = window.HUB_CONFIG || {};
+  const sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  const CARD_NAME = { ...P.CARDS, other: '기타 카드' };
+  const cardLabel = (r) => (CARD_NAME[r.card] || r.card) + (r.card_last4 ? ` ${r.card_last4}` : '');
+  const UNCAT = '미분류';
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  };
+
+  let user = null;
+  let txs = [];
+  let rules = [];
+  let tab = 'list';
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  let month = thisMonth;
+  let allTime = false;
+  let showDone = false;
+
+  // ── 날짜 도우미 ────────────────────────────────
+  const ym = (d) => d.slice(0, 7);
+  const addMonth = (m, n) => {
+    const [y, mo] = m.split('-').map(Number);
+    const d = new Date(y, mo - 1 + n, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  };
+  const monthsBetween = (a, b) => { const [ay, am] = a.split('-').map(Number); const [by, bm] = b.split('-').map(Number); return (by - ay) * 12 + (bm - am); };
+  const monthText = (m) => { const [y, mo] = m.split('-').map(Number); return `${y}년 ${mo}월`; };
+  const dayText = (d) => new Date(`${d}T00:00:00`).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+  const counted = (r) => !r.excluded;
+
+  // ── 불러오기 ──────────────────────────────────
+  async function fetchAll(table, cols, orderCol) {
+    let out = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await sb.from(table).select(cols).order(orderCol, { ascending: false }).order('id').range(from, from + 999);
+      if (error) throw error;
+      out = out.concat(data);
+      if (data.length < 1000) return out;
+    }
+  }
+  const missingTable = (e) => e && (e.code === '42P01' || e.code === 'PGRST205' || /does not exist|Could not find the table/i.test(e.message || ''));
+
+  async function load() {
+    $('#err').textContent = '';
+    try {
+      [txs, rules] = await Promise.all([
+        fetchAll('budget_tx', '*', 'date'),
+        fetchAll('budget_rules', 'id, keyword, category', 'created_at'),
+      ]);
+    } catch (e) {
+      if (missingTable(e)) { $('#setup').hidden = false; $('#main').hidden = true; return; }
+      $('#err').textContent = `불러오지 못했어요: ${e.message}`;
+      return;
+    }
+    $('#setup').hidden = true;
+    $('#main').hidden = false;
+    render();
+  }
+
+  function categories() {
+    const set = new Set(Object.keys(P.DEFAULT_RULES));
+    rules.forEach((r) => set.add(r.category));
+    txs.forEach((t) => t.category && set.add(t.category));
+    return [...set].sort((a, b) => a.localeCompare(b, 'ko'));
+  }
+
+  function inPeriod(r) { return allTime || ym(r.date) === month; }
+
+  // ── 그리기 ────────────────────────────────────
+  function render() {
+    $('#count').textContent = `${txs.length.toLocaleString('ko-KR')}건`;
+    $('#month-label').textContent = allTime ? '전체 기간' : monthText(month);
+    $('#all-time').setAttribute('aria-pressed', String(allTime));
+    $('#prev').disabled = $('#next').disabled = allTime;
+    $('#monthbar').hidden = tab === 'inst' || tab === 'rules';
+    $$('[data-tab]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
+    $$('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== tab));
+    $('#cat-list').innerHTML = categories().map((c) => `<option value="${esc(c)}">`).join('');
+    if (tab === 'list') renderList();
+    if (tab === 'stats') renderStats();
+    if (tab === 'inst') renderInst();
+    if (tab === 'rules') renderRules();
+  }
+
+  function fillFilters() {
+    const cardSel = $('#f-card');
+    const catSel = $('#f-cat');
+    const cv = cardSel.value;
+    const kv = catSel.value;
+    const cardsUsed = [...new Set(txs.map((t) => t.card))];
+    cardSel.innerHTML = `<option value="">모든 카드</option>` + cardsUsed.map((c) => `<option value="${esc(c)}">${esc(CARD_NAME[c] || c)}</option>`).join('');
+    catSel.innerHTML = `<option value="">모든 분류</option><option value="${UNCAT}">${UNCAT}</option>` + categories().map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    cardSel.value = cardsUsed.includes(cv) ? cv : '';
+    catSel.value = [...catSel.options].some((o) => o.value === kv) ? kv : '';
+  }
+
+  function renderList() {
+    fillFilters();
+    const fc = $('#f-card').value;
+    const fk = $('#f-cat').value;
+    const q = $('#f-q').value.trim().toLowerCase().replace(/\s+/g, '');
+    const shown = txs.filter((r) => inPeriod(r)
+      && (!fc || r.card === fc)
+      && (!fk || (fk === UNCAT ? !r.category : r.category === fk))
+      && (!q || `${r.merchant}${r.memo}`.toLowerCase().replace(/\s+/g, '').includes(q)));
+    const total = shown.filter(counted).reduce((s, r) => s + Number(r.amount), 0);
+    $('#list-sum').textContent = `${shown.length.toLocaleString('ko-KR')}건 · 합계 ${won(total)}`;
+    $('#list-empty').hidden = shown.length > 0;
+    const days = new Map();
+    shown.forEach((r) => { if (!days.has(r.date)) days.set(r.date, []); days.get(r.date).push(r); });
+    $('#list').innerHTML = [...days].map(([d, rs]) => `
+      <section class="day">
+        <div class="day-head"><span>${dayText(d)}</span><span>${won(rs.filter(counted).reduce((s, r) => s + Number(r.amount), 0))}</span></div>
+        <ul class="txs px">${rs.map(txRow).join('')}</ul>
+      </section>`).join('');
+  }
+
+  function txRow(r) {
+    const tags = [
+      r.category ? `<span class="tag cat">${esc(r.category)}</span>` : `<span class="tag none">${UNCAT}</span>`,
+      r.installment >= 2 ? `<span class="tag">${r.installment}개월 할부</span>` : '',
+      r.is_cancel ? '<span class="tag warn">취소</span>' : '',
+      r.is_overseas ? '<span class="tag">해외</span>' : '',
+      r.excluded ? '<span class="tag none">합계 제외</span>' : '',
+    ].join('');
+    return `<li class="tx ${r.excluded ? 'out' : ''}" data-id="${r.id}" tabindex="0">
+      <div class="tx-name"><b>${esc(r.merchant || '(가맹점 없음)')}</b>${tags}</div>
+      <div class="tx-amt ${r.amount < 0 ? 'minus' : ''}">${won(r.amount)}</div>
+      <div class="tx-memo">${esc(r.memo)}</div>
+      <div class="tx-meta">${esc(cardLabel(r))}</div>
+    </li>`;
+  }
+
+  function bars(el, items, onClick) {
+    const max = Math.max(1, ...items.map((i) => Math.abs(i.value)));
+    const total = items.reduce((s, i) => s + i.value, 0) || 1;
+    el.innerHTML = items.length ? items.map((i) => `
+      <li class="row" data-key="${esc(i.key)}">
+        <span class="row-name">${esc(i.label)}</span>
+        <span class="row-bar"><i style="width:${Math.max(0, (i.value / max) * 100).toFixed(1)}%"></i></span>
+        <span class="row-val">${won(i.value)}<small>${i.count}건 · ${Math.round((i.value / total) * 100)}%</small></span>
+      </li>`).join('') : '<li class="mute">내역이 없어요.</li>';
+    el.onclick = (e) => { const li = e.target.closest('[data-key]'); if (li && onClick) onClick(li.dataset.key); };
+  }
+
+  function group(rows, keyFn) {
+    const m = new Map();
+    rows.forEach((r) => { const k = keyFn(r); const g = m.get(k) || { key: k, value: 0, count: 0 }; g.value += Number(r.amount); g.count++; m.set(k, g); });
+    return [...m.values()].sort((a, b) => b.value - a.value);
+  }
+
+  function renderStats() {
+    const rows = txs.filter((r) => inPeriod(r) && counted(r));
+    const total = rows.reduce((s, r) => s + Number(r.amount), 0);
+    $('#s-total-label').textContent = allTime ? '전체 기간 쓴 돈' : `${monthText(month)}에 쓴 돈`;
+    $('#s-total').textContent = won(total);
+    if (allTime) {
+      $('#s-diff').textContent = '';
+    } else {
+      const prev = txs.filter((r) => ym(r.date) === addMonth(month, -1) && counted(r)).reduce((s, r) => s + Number(r.amount), 0);
+      const d = total - prev;
+      $('#s-diff').textContent = prev ? `지난달보다 ${d >= 0 ? '+' : '−'}${won(Math.abs(d))}` : '지난달 내역 없음';
+    }
+    const cancels = rows.filter((r) => r.is_cancel);
+    $('#s-count').textContent = `${rows.length - cancels.length}건`;
+    $('#s-cancel').textContent = cancels.length ? `취소 ${cancels.length}건 (${won(cancels.reduce((s, r) => s + Number(r.amount), 0))})` : '취소 없음';
+    let days;
+    if (allTime) {
+      const dates = rows.map((r) => r.date).sort();
+      days = dates.length ? Math.round((new Date(dates[dates.length - 1]) - new Date(dates[0])) / 86400000) + 1 : 1;
+    } else {
+      const [y, mo] = month.split('-').map(Number);
+      days = month === thisMonth ? now.getDate() : new Date(y, mo, 0).getDate();
+    }
+    $('#s-avg').textContent = won(total / Math.max(1, days));
+    $('#s-days').textContent = `${days}일 기준`;
+
+    bars($('#s-cats'), group(rows, (r) => r.category || UNCAT).map((g) => ({ ...g, label: g.key })), (k) => {
+      tab = 'list';
+      $('#f-q').value = '';
+      render();
+      $('#f-cat').value = k;
+      renderList();
+    });
+    bars($('#s-cards'), group(rows, (r) => r.card).map((g) => ({ ...g, label: CARD_NAME[g.key] || g.key })), (k) => {
+      tab = 'list';
+      render();
+      $('#f-card').value = k;
+      renderList();
+    });
+
+    const end = allTime ? thisMonth : month;
+    const ms = Array.from({ length: 12 }, (_, i) => addMonth(end, i - 11));
+    const sums = ms.map((m) => txs.filter((r) => ym(r.date) === m && counted(r)).reduce((s, r) => s + Number(r.amount), 0));
+    const max = Math.max(1, ...sums);
+    $('#s-chart').innerHTML = ms.map((m, i) => `
+      <div class="col ${!allTime && m === month ? 'on' : ''}" data-m="${m}" title="${monthText(m)} ${won(sums[i])}">
+        <em>${sums[i] ? Math.round(sums[i] / 10000).toLocaleString('ko-KR') + '만' : ''}</em>
+        <i style="height:${Math.max(0, (sums[i] / max) * 100).toFixed(1)}%"></i>
+        <span>${Number(m.slice(5))}월</span>
+      </div>`).join('');
+  }
+
+  // 할부: 산 다음 달부터 N번 나눠 낸다고 보고 계산 (추정)
+  function instInfo(r) {
+    const n = r.installment;
+    const paid = Math.min(n, Math.max(0, monthsBetween(ym(r.date), thisMonth)));
+    const per = Math.round(Number(r.amount) / n);
+    return { n, paid, per, left: n - paid, billedNow: paid >= 1 && paid <= n && monthsBetween(ym(r.date), thisMonth) <= n, end: addMonth(ym(r.date), n) };
+  }
+
+  function renderInst() {
+    // 취소된 할부는 빼기 (같은 승인번호, 없으면 같은 날 · 가맹점 · 금액의 취소 줄이 있으면)
+    const cancelKey = (r) => `${r.card}|${r.approval_no || `${r.date}|${r.merchant}`}|${Math.abs(r.amount)}`;
+    const cancelled = new Set(txs.filter((r) => r.is_cancel).map(cancelKey));
+    const all = txs.filter((r) => r.installment >= 2 && !r.is_cancel && counted(r) && !cancelled.has(cancelKey(r)));
+    const infos = all.map((r) => ({ r, ...instInfo(r) }));
+    const nowBilled = infos.filter((i) => i.billedNow);
+    const live = infos.filter((i) => i.left > 0);
+    $('#i-month').textContent = won(nowBilled.reduce((s, i) => s + i.per, 0));
+    $('#i-month-n').textContent = `${nowBilled.length}건`;
+    $('#i-left').textContent = won(live.reduce((s, i) => s + i.per * i.left, 0));
+    $('#i-left-n').textContent = `진행 중 ${live.length}건`;
+    $('#i-all').textContent = won(all.reduce((s, r) => s + Number(r.amount), 0));
+    $('#i-all-n').textContent = `${all.length}건`;
+    $('#i-done').setAttribute('aria-pressed', String(showDone));
+    const shown = infos.filter((i) => showDone || i.left > 0);
+    $('#i-empty').hidden = shown.length > 0;
+    $('#i-rows').innerHTML = shown.map(({ r, n, paid, per, left, end }) => `
+      <tr class="click" data-id="${r.id}">
+        <td>${r.date}</td>
+        <td>${esc(r.merchant)}${r.memo ? `<br><small class="mute">${esc(r.memo)}</small>` : ''}<br><small class="mute">${esc(cardLabel(r))}</small></td>
+        <td class="num">${won(r.amount)}</td>
+        <td class="num">${n}개월</td>
+        <td class="num">${won(per)}</td>
+        <td class="num">${left ? `${paid}/${n}회` : '끝'}</td>
+        <td class="num">${monthText(end)}</td>
+      </tr>`).join('');
+  }
+
+  function renderRules() {
+    const byCat = new Map();
+    rules.forEach((r) => { if (!byCat.has(r.category)) byCat.set(r.category, []); byCat.get(r.category).push(r); });
+    $('#r-list').innerHTML = rules.length ? [...byCat].sort((a, b) => a[0].localeCompare(b[0], 'ko')).map(([cat, rs]) => `
+      <div class="rule-group px">
+        <h3>${esc(cat)}<small>${rs.length}개</small></h3>
+        <div class="chips">${rs.sort((a, b) => a.keyword.localeCompare(b.keyword, 'ko')).map((r) => `
+          <span class="chip"><button type="button" data-edit="${r.id}" title="분류 바꾸기">${esc(r.keyword)}</button><button type="button" class="x" data-del="${r.id}" aria-label="${esc(r.keyword)} 규칙 삭제">✕</button></span>`).join('')}
+        </div>
+      </div>`).join('') : '<p class="empty">아직 규칙이 없어요. 「기본 규칙 넣기」 를 누르면 자주 쓰는 가게들이 한 번에 들어가요.</p>';
+
+    const un = new Map();
+    txs.filter((t) => !t.category && t.merchant).forEach((t) => {
+      const g = un.get(t.merchant) || { n: 0, sum: 0 };
+      g.n++; g.sum += Number(t.amount);
+      un.set(t.merchant, g);
+    });
+    const list = [...un].sort((a, b) => b[1].sum - a[1].sum).slice(0, 60);
+    $('#r-uncat').innerHTML = list.length ? list.map(([m, g]) => `
+      <span class="chip"><button type="button" data-fill="${esc(m)}">${esc(m)} <span class="mute">· ${g.n}건 ${won(g.sum)}</span></button></span>`).join('')
+      : '<span class="mute">모두 분류됐어요.</span>';
+  }
+
+  // ── 규칙 ─────────────────────────────────────
+  function ruleMsg(t) { $('#r-msg').textContent = t; }
+
+  // 규칙이 정한 분류(category_auto)만 다시 계산. 직접 고친 분류는 그대로
+  async function applyRules(onlyIds) {
+    const changes = new Map(); // category → [id]
+    txs.forEach((t) => {
+      if (!t.category_auto) return;
+      if (onlyIds && !onlyIds.has(t.id)) return;
+      const c = P.categorize(t.merchant, rules);
+      if (c !== t.category) {
+        if (!changes.has(c)) changes.set(c, []);
+        changes.get(c).push(t.id);
+      }
+    });
+    let n = 0;
+    for (const [cat, ids] of changes) {
+      for (let i = 0; i < ids.length; i += 200) {
+        const part = ids.slice(i, i + 200);
+        const { error } = await sb.from('budget_tx').update({ category: cat }).in('id', part);
+        if (error) throw error;
+        n += part.length;
+        txs.forEach((t) => { if (part.includes(t.id)) t.category = cat; });
+      }
+    }
+    return n;
+  }
+
+  async function addRules(list) {
+    const have = new Set(rules.map((r) => r.keyword.replace(/\s+/g, '').toLowerCase()));
+    const fresh = list.filter((r) => !have.has(r.keyword.replace(/\s+/g, '').toLowerCase()));
+    if (!fresh.length) return 0;
+    const { data, error } = await sb.from('budget_rules').insert(fresh.map((r) => ({ keyword: r.keyword.trim(), category: r.category.trim() }))).select('id, keyword, category');
+    if (error) throw error;
+    rules = rules.concat(data);
+    return data.length;
+  }
+
+  $('#rule-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const keyword = $('#r-key').value.trim();
+    const category = $('#r-cat').value.trim();
+    if (!keyword || !category) return;
+    try {
+      const existing = rules.find((r) => r.keyword.replace(/\s+/g, '').toLowerCase() === keyword.replace(/\s+/g, '').toLowerCase());
+      if (existing) {
+        const { error } = await sb.from('budget_rules').update({ category }).eq('id', existing.id);
+        if (error) throw error;
+        existing.category = category;
+      } else {
+        await addRules([{ keyword, category }]);
+      }
+      const n = await applyRules();
+      $('#r-key').value = '';
+      ruleMsg(`「${keyword}」 → ${category} 규칙을 저장했어요.${n ? ` 내역 ${n}건의 분류가 바뀌었어요.` : ''}`);
+      render();
+      $('#r-key').focus();
+    } catch (err) { ruleMsg(`저장하지 못했어요: ${err.message}`); }
+  };
+
+  $('#r-defaults').onclick = async () => {
+    const list = Object.entries(P.DEFAULT_RULES).flatMap(([category, ks]) => ks.map((keyword) => ({ keyword, category })));
+    try {
+      const added = await addRules(list);
+      const n = await applyRules();
+      ruleMsg(added ? `기본 규칙 ${added}개를 넣었어요.${n ? ` 내역 ${n}건이 분류됐어요.` : ''}` : '기본 규칙은 이미 다 들어 있어요.');
+      render();
+    } catch (err) { ruleMsg(`넣지 못했어요: ${err.message}`); }
+  };
+
+  $('#r-apply').onclick = async () => {
+    try {
+      const n = await applyRules();
+      ruleMsg(n ? `내역 ${n}건의 분류를 다시 정했어요. (직접 고친 분류는 그대로예요)` : '바뀐 것이 없어요.');
+      render();
+    } catch (err) { ruleMsg(`적용하지 못했어요: ${err.message}`); }
+  };
+
+  $('[data-panel="rules"]').addEventListener('click', async (e) => {
+    const fill = e.target.closest('[data-fill]');
+    if (fill) { $('#r-key').value = fill.dataset.fill; $('#r-cat').focus(); return; }
+    const del = e.target.closest('[data-del]');
+    const edit = e.target.closest('[data-edit]');
+    try {
+      if (del) {
+        const r = rules.find((x) => x.id === del.dataset.del);
+        const { error } = await sb.from('budget_rules').delete().eq('id', r.id);
+        if (error) throw error;
+        rules = rules.filter((x) => x !== r);
+        ruleMsg(`「${r.keyword}」 규칙을 지웠어요. 이미 분류된 내역은 「규칙 다시 적용」 을 누르면 다시 계산돼요.`);
+        render();
+      } else if (edit) {
+        const r = rules.find((x) => x.id === edit.dataset.edit);
+        const c = prompt(`「${r.keyword}」 의 분류`, r.category);
+        if (c == null || !c.trim() || c.trim() === r.category) return;
+        const { error } = await sb.from('budget_rules').update({ category: c.trim() }).eq('id', r.id);
+        if (error) throw error;
+        r.category = c.trim();
+        const n = await applyRules();
+        ruleMsg(`「${r.keyword}」 → ${r.category}${n ? ` · 내역 ${n}건이 바뀌었어요.` : ''}`);
+        render();
+      }
+    } catch (err) { ruleMsg(`실패했어요: ${err.message}`); }
+  });
+
+  // ── 한 줄 편집 ────────────────────────────────
+  const ed = $('#ed');
+  const form = $('#ed-form');
+  let editing = null;
+  form.card.innerHTML = Object.entries(CARD_NAME).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+  form.installment.innerHTML = '<option value="0">일시불</option>' + [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 18, 24, 36].map((n) => `<option value="${n}">${n}개월</option>`).join('');
+
+  function openEdit(r) {
+    editing = r || null;
+    $('#ed-title').textContent = r ? '내역 고치기' : '직접 입력';
+    $('#ed-err').textContent = '';
+    $('#ed-del').hidden = !r;
+    const today = `${thisMonth}-${String(now.getDate()).padStart(2, '0')}`;
+    form.date.value = r ? r.date : (month === thisMonth || allTime ? today : `${month}-01`);
+    form.amount.value = r ? Math.abs(r.amount).toLocaleString('ko-KR') : '';
+    form.merchant.value = r ? r.merchant : '';
+    form.card.value = r ? (CARD_NAME[r.card] ? r.card : 'other') : 'manual';
+    form.card_last4.value = r?.card_last4 || '';
+    if (r && ![...form.installment.options].some((o) => Number(o.value) === r.installment)) {
+      form.installment.insertAdjacentHTML('beforeend', `<option value="${r.installment}">${r.installment}개월</option>`);
+    }
+    form.installment.value = String(r ? r.installment : 0);
+    form.category.value = r ? r.category : '';
+    form.memo.value = r ? r.memo : '';
+    form.is_cancel.checked = !!r?.is_cancel;
+    form.is_overseas.checked = !!r?.is_overseas;
+    form.excluded.checked = !!r?.excluded;
+    form.make_rule.checked = false;
+    $('#ed-src').textContent = r
+      ? (r.source === 'excel' ? `엑셀에서 가져온 줄${r.approval_no ? ` · 승인번호 ${r.approval_no}` : ''}. 고쳐도 엑셀을 다시 올릴 때 중복으로 들어가지 않아요.` : '직접 입력한 줄')
+      : '';
+    ed.showModal();
+    (r ? form.memo : form.amount).focus();
+  }
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    $('#ed-err').textContent = '';
+    const amount = P.parseAmount(form.amount.value);
+    if (!form.date.value) return ($('#ed-err').textContent = '날짜를 넣어 주세요.');
+    if (isNaN(amount) || amount === 0) return ($('#ed-err').textContent = '금액을 숫자로 넣어 주세요.');
+    const merchant = form.merchant.value.trim();
+    const typedCat = form.category.value.trim();
+    const isCancel = form.is_cancel.checked;
+    const row = {
+      date: form.date.value,
+      amount: isCancel ? -Math.abs(amount) : Math.abs(amount),
+      merchant,
+      card: form.card.value,
+      card_last4: form.card_last4.value.replace(/\D/g, '') || null,
+      installment: Number(form.installment.value),
+      memo: form.memo.value.trim(),
+      is_cancel: isCancel,
+      is_overseas: form.is_overseas.checked,
+      excluded: form.excluded.checked,
+    };
+    // 분류: 비우면 규칙으로 자동, 직접 바꾸면 그대로 고정
+    if (!typedCat) { row.category = P.categorize(merchant, rules); row.category_auto = true; }
+    else if (!editing || typedCat !== editing.category) { row.category = typedCat; row.category_auto = false; }
+    $('#ed-save').disabled = true;
+    try {
+      if (form.make_rule.checked && merchant && typedCat) {
+        const existing = rules.find((r) => r.keyword.replace(/\s+/g, '').toLowerCase() === merchant.replace(/\s+/g, '').toLowerCase());
+        if (existing) {
+          const { error } = await sb.from('budget_rules').update({ category: typedCat }).eq('id', existing.id);
+          if (error) throw error;
+          existing.category = typedCat;
+        } else {
+          await addRules([{ keyword: merchant, category: typedCat }]);
+        }
+        row.category_auto = true; // 규칙과 같은 분류이므로 규칙을 따름
+      }
+      if (editing) {
+        const { data, error } = await sb.from('budget_tx').update(row).eq('id', editing.id).select().single();
+        if (error) throw error;
+        Object.assign(editing, data);
+      } else {
+        const { data, error } = await sb.from('budget_tx').insert({ ...row, source: 'manual' }).select().single();
+        if (error) throw error;
+        txs.unshift(data);
+        txs.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+      }
+      if (form.make_rule.checked) await applyRules();
+      ed.close();
+      render();
+    } catch (err) {
+      $('#ed-err').textContent = `저장하지 못했어요: ${err.message}`;
+    } finally {
+      $('#ed-save').disabled = false;
+    }
+  };
+
+  $('#ed-del').onclick = async () => {
+    if (!editing) return;
+    const extra = editing.source === 'excel' ? '\n\n엑셀에서 온 줄이라 같은 엑셀을 다시 올리면 다시 들어와요. 합계에서만 빼려면 「합계에서 빼기」 를 쓰세요.' : '';
+    if (!confirm(`이 내역을 지울까요? 되돌릴 수 없어요.${extra}`)) return;
+    const { error } = await sb.from('budget_tx').delete().eq('id', editing.id);
+    if (error) return ($('#ed-err').textContent = error.message);
+    txs = txs.filter((t) => t !== editing);
+    ed.close();
+    render();
+  };
+  $('#ed-x').onclick = $('#ed-cancel').onclick = () => ed.close();
+
+  const openById = (id) => { const r = txs.find((t) => t.id === id); if (r) openEdit(r); };
+  $('#list').addEventListener('click', (e) => { const li = e.target.closest('[data-id]'); if (li) openById(li.dataset.id); });
+  $('#list').addEventListener('keydown', (e) => { if (e.key === 'Enter') { const li = e.target.closest('[data-id]'); if (li) openById(li.dataset.id); } });
+  $('#i-rows').addEventListener('click', (e) => { const tr = e.target.closest('[data-id]'); if (tr) openById(tr.dataset.id); });
+  $('#open-new').onclick = () => openEdit(null);
+
+  // ── 엑셀 올리기 ──────────────────────────────
+  const imp = $('#imp');
+  let jobs = [];
+
+  // 글자 파일(CSV · HTML 로 된 .xls)은 한글 인코딩(UTF-8 / EUC-KR)을 맞춰서 읽는다
+  function decodeText(buf) {
+    const bytes = new Uint8Array(buf);
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch (e) {}
+    return new TextDecoder('euc-kr').decode(bytes);
+  }
+  function looksText(buf) {
+    const b = new Uint8Array(buf.slice(0, 4));
+    if (b[0] === 0xd0 && b[1] === 0xcf) return false; // 옛 엑셀(.xls)
+    if (b[0] === 0x50 && b[1] === 0x4b) return false; // 새 엑셀(.xlsx, zip)
+    return true;
+  }
+
+  async function readFile(file) {
+    const buf = await file.arrayBuffer();
+    let wb;
+    if (looksText(buf)) {
+      wb = XLSX.read(decodeText(buf), { type: 'string', raw: false });
+    } else {
+      wb = XLSX.read(buf, { type: 'array' });
+    }
+    return wb.SheetNames.map((name) => {
+      const ws = wb.Sheets[name];
+      return {
+        name,
+        raw: XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '', blankrows: true }),
+        text: XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '', blankrows: true }),
+      };
+    });
+  }
+
+  // 카드사별로 마지막에 쓴 칸 짝짓기를 기억 (칸 이름으로)
+  function savedMap(card, headers) {
+    const s = card && store.get(`budget-map:${card}`);
+    if (!s) return null;
+    const map = {};
+    for (const [k, name] of Object.entries(s)) {
+      if (name == null) continue;
+      const i = headers.indexOf(name);
+      if (i < 0) return null;
+      map[k] = i;
+    }
+    return map;
+  }
+  function saveMap(job) {
+    if (!job.card || job.card === 'other') return;
+    const s = {};
+    for (const [k, i] of Object.entries(job.map)) s[k] = job.headers[i];
+    store.set(`budget-map:${job.card}`, s);
+  }
+
+  function runJob(job, keepMap) {
+    const sh = job.sheets[job.sheet];
+    const opts = { fileName: job.file.name, text: sh.text };
+    if (job.headerRow != null) opts.headerRow = job.headerRow;
+    if (job.card) opts.card = job.card;
+    if (keepMap) opts.map = job.map;
+    let res = P.parseSheet(sh.raw, opts);
+    if (!keepMap && res.headerRow >= 0) {
+      const saved = savedMap(res.card, res.headers);
+      if (saved) res = P.parseSheet(sh.raw, { ...opts, card: res.card, headerRow: res.headerRow, map: saved });
+    }
+    Object.assign(job, { headerRow: res.headerRow, headers: res.headers, map: res.map, card: res.card || job.card || '', rows: res.rows, skipped: res.skipped });
+  }
+
+  async function addFiles(files) {
+    $('#imp-err').textContent = '';
+    for (const file of files) {
+      const job = { file, sheets: [], sheet: 0, card: '', headerRow: null, map: {}, rows: [], result: '' };
+      try {
+        job.sheets = await readFile(file);
+        // 칸 이름 줄을 찾을 수 있는 첫 시트
+        const idx = job.sheets.findIndex((s) => P.findHeader(s.raw) >= 0);
+        job.sheet = idx >= 0 ? idx : 0;
+        runJob(job);
+      } catch (e) {
+        job.error = /password|encrypt/i.test(e.message || '')
+          ? '비밀번호가 걸린 파일이에요. 엑셀에서 열어 비밀번호 없이 다른 이름으로 저장한 뒤 올려 주세요.'
+          : `읽지 못했어요: ${e.message}`;
+      }
+      jobs.push(job);
+    }
+    renderJobs();
+  }
+
+  const span = (rows) => { const ds = rows.map((r) => r.date).sort(); return `${ds[0]} ~ ${ds[ds.length - 1]}`; };
+
+  function renderJobs() {
+    const cardOpts = (sel) => `<option value="">카드사 고르기</option>` + ['hyundai', 'shinhan', 'samsung', 'other'].map((k) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${CARD_NAME[k]}</option>`).join('');
+    $('#jobs').innerHTML = jobs.map((j, ji) => {
+      if (j.error) return `<div class="job px" data-job="${ji}"><div class="job-head"><b>${esc(j.file.name)}</b><button class="btn sm px" type="button" data-rm>빼기</button></div><p class="err">${esc(j.error)}</p></div>`;
+      const colOpts = (cur) => `<option value="">(없음)</option>` + j.headers.map((h, i) => `<option value="${i}" ${cur === i ? 'selected' : ''}>${esc(h || `${i + 1}번째 칸`)}</option>`).join('');
+      const found = j.headerRow >= 0;
+      const preview = j.rows.slice(0, 6);
+      return `<div class="job px" data-job="${ji}">
+        <div class="job-head">
+          <b>${esc(j.file.name)}</b>
+          ${j.sheets.length > 1 ? `<select data-sheet aria-label="시트">${j.sheets.map((s, i) => `<option value="${i}" ${i === j.sheet ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select>` : ''}
+          <select data-card aria-label="카드사">${cardOpts(j.card)}</select>
+          <label class="mute" style="font-size:12px">칸 이름 줄 <input data-hrow type="number" min="1" style="width:4.5em;height:26px;font:inherit;font-size:12px;box-shadow:0 0 0 1px var(--ink);border:0;padding:0 4px" value="${found ? j.headerRow + 1 : ''}"></label>
+          <span style="flex:1"></span>
+          <button class="btn sm px" type="button" data-rm>빼기</button>
+        </div>
+        ${found ? `
+          <p class="help">자동으로 짝지은 칸이에요. 틀렸으면 고쳐 주세요 (카드사별로 기억해요).</p>
+          <div class="maps">${P.FIELDS.map((f) => `<label class="field"><span>${f.label}${f.need ? ' *' : ''}</span><select data-map="${f.key}">${colOpts(j.map[f.key])}</select></label>`).join('')}</div>
+          <p class="help">읽은 내역 <b>${j.rows.length}건</b>${j.skipped ? ` · 날짜나 금액이 없어서 뺀 줄 ${j.skipped}개 (합계 줄 등)` : ''}${j.rows.length ? ` · ${span(j.rows)}` : ''}</p>
+          ${preview.length ? `<div style="overflow-x:auto"><table><thead><tr><th>이용일</th><th>가맹점</th><th class="num">금액</th><th>할부</th><th>승인번호</th><th>카드</th><th>분류 (자동)</th></tr></thead><tbody>
+            ${preview.map((r) => `<tr><td>${r.date}</td><td>${esc(r.merchant)}${r.is_cancel ? ' <span class="tag warn">취소</span>' : ''}${r.is_overseas ? ' <span class="tag">해외</span>' : ''}</td><td class="num">${won(r.amount)}</td><td>${r.installment ? r.installment + '개월' : '일시불'}</td><td>${esc(r.approval_no || '')}</td><td>${esc(r.card_last4 || '')}</td><td>${esc(P.categorize(r.merchant, rules) || '-')}</td></tr>`).join('')}
+          </tbody></table></div>` : ''}
+          ${!j.card ? '<p class="err">카드사를 골라 주세요.</p>' : ''}`
+        : '<p class="err">이용일 · 가맹점 · 금액 칸을 찾지 못했어요. 위의 「칸 이름 줄」 에 칸 이름이 있는 줄 번호(엑셀 왼쪽 숫자)를 넣어 보세요.</p>'}
+        <p class="result">${j.result || ''}</p>
+      </div>`;
+    }).join('');
+    $('#imp-go').disabled = !jobs.some((j) => !j.error && !j.done && j.rows.length && j.card);
+  }
+
+  $('#jobs').addEventListener('change', (e) => {
+    const el = e.target;
+    const j = jobs[Number(el.closest('[data-job]')?.dataset.job)];
+    if (!j) return;
+    if (el.matches('[data-sheet]')) { j.sheet = Number(el.value); j.headerRow = null; runJob(j); }
+    if (el.matches('[data-card]')) { j.card = el.value; const saved = savedMap(j.card, j.headers); if (saved) j.map = saved; runJob(j, true); }
+    if (el.matches('[data-hrow]')) { const n = Number(el.value); j.headerRow = n >= 1 ? n - 1 : null; runJob(j); }
+    if (el.matches('[data-map]')) {
+      const key = el.dataset.map;
+      if (el.value === '') delete j.map[key]; else {
+        const col = Number(el.value);
+        for (const k of Object.keys(j.map)) if (j.map[k] === col) delete j.map[k]; // 한 칸은 한 항목에만
+        j.map[key] = col;
+      }
+      runJob(j, true);
+      saveMap(j);
+    }
+    j.done = false; j.result = '';
+    renderJobs();
+  });
+  $('#jobs').addEventListener('click', (e) => {
+    if (!e.target.closest('[data-rm]')) return;
+    jobs.splice(Number(e.target.closest('[data-job]').dataset.job), 1);
+    renderJobs();
+  });
+
+  $('#imp-go').onclick = async () => {
+    $('#imp-go').disabled = true;
+    $('#imp-err').textContent = '';
+    for (const j of jobs) {
+      if (j.error || j.done || !j.rows.length || !j.card) continue;
+      saveMap(j);
+      const rows = j.rows.map((r) => ({
+        ...r,
+        card: j.card,
+        dedup_key: `${j.card}|${r.dedup_key.split('|').slice(1).join('|')}`, // 카드사를 나중에 골랐어도 같은 지문
+        user_id: user.id,
+        source: 'excel',
+        category: P.categorize(r.merchant, rules),
+        category_auto: true,
+      }));
+      let added = 0;
+      try {
+        for (let i = 0; i < rows.length; i += 500) {
+          const { data, error } = await sb.from('budget_tx')
+            .upsert(rows.slice(i, i + 500), { onConflict: 'user_id,dedup_key', ignoreDuplicates: true })
+            .select();
+          if (error) throw error;
+          added += data.length;
+          txs = txs.concat(data);
+        }
+        j.done = true;
+        j.result = `✔ 새로 ${added}건 넣었어요.${rows.length - added ? ` 이미 있던 ${rows.length - added}건은 건너뛰었어요.` : ''}`;
+      } catch (e) {
+        j.result = `<span class="err">넣지 못했어요: ${esc(e.message)}${added ? ` (그 전까지 ${added}건은 들어갔어요)` : ''}</span>`;
+      }
+    }
+    txs.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    // 방금 넣은 내역의 마지막 달로 이동
+    const latest = jobs.filter((j) => j.done).flatMap((j) => j.rows.map((r) => r.date)).sort().pop();
+    if (latest) { month = ym(latest); allTime = false; }
+    renderJobs();
+    render();
+  };
+
+  $('#open-import').onclick = () => { jobs = []; renderJobs(); imp.showModal(); };
+  $('#imp-x').onclick = $('#imp-cancel').onclick = () => imp.close();
+  $('#files').onchange = (e) => { addFiles([...e.target.files]); e.target.value = ''; };
+  const drop = $('#drop');
+  drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); addFiles([...e.dataTransfer.files]); });
+
+  // ── 탭 · 달 · 거르기 ──────────────────────────
+  $$('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; render(); }));
+  $('#prev').onclick = () => { month = addMonth(month, -1); render(); };
+  $('#next').onclick = () => { month = addMonth(month, 1); render(); };
+  $('#all-time').onclick = () => { allTime = !allTime; render(); };
+  $('#s-chart').addEventListener('click', (e) => { const c = e.target.closest('[data-m]'); if (c) { month = c.dataset.m; allTime = false; render(); } });
+  $('#i-done').onclick = () => { showDone = !showDone; render(); };
+  ['#f-card', '#f-cat'].forEach((s) => $(s).addEventListener('change', renderList));
+  $('#f-q').addEventListener('input', renderList);
+  $('#retry').onclick = load;
+
+  sb.auth.getSession().then(({ data }) => {
+    if (!data.session) return window.midoriToLogin();
+    user = data.session.user;
+    load();
+  });
+})();
+</script>
+</body>
+</html>
