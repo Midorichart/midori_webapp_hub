@@ -189,7 +189,7 @@
   <section class="intro">
     <div>
       <h1>가계부<span id="count"></span></h1>
-      <p>카드사 이용내역 엑셀을 올리면 자동으로 분류해서 모아요. 산 물건은 메모에 적어 두세요.</p>
+      <p>카드사 이용내역 · 카카오뱅크 거래내역 엑셀을 올리면 자동으로 분류해서 모아요. 산 물건은 메모에 적어 두세요.</p>
     </div>
     <div class="tools">
       <button class="btn primary px" type="button" id="open-import">엑셀 올리기</button>
@@ -291,9 +291,10 @@
 
 <!-- 엑셀 올리기 -->
 <dialog id="imp" aria-label="엑셀 올리기">
-  <div class="ed-head"><b>카드 이용내역 엑셀 올리기</b><button class="btn px" type="button" id="imp-x">닫기 ✕</button></div>
+  <div class="ed-head"><b>카드 · 은행 내역 엑셀 올리기</b><button class="btn px" type="button" id="imp-x">닫기 ✕</button></div>
   <div class="ed-body">
-    <p class="help">현대 · 신한 · 삼성카드 홈페이지에서 받은 이용내역 파일(.xls · .xlsx · .csv)을 올려 주세요. 여러 개를 한꺼번에 올려도 되고, 이미 올린 기간을 다시 올려도 같은 내역은 한 번만 들어가요.</p>
+    <p class="help">현대 · 신한 · 삼성카드 홈페이지에서 받은 이용내역 파일이나 카카오뱅크 거래내역 파일(.xls · .xlsx · .csv)을 올려 주세요. 여러 개를 한꺼번에 올려도 되고, 이미 올린 기간을 다시 올려도 같은 내역은 한 번만 들어가요.</p>
+    <p class="help">카카오뱅크는 <b>출금만</b> 지출로 넣어요. 월급 같은 입금은 건너뛰고, 체크카드 취소 · 환불 입금은 지출에서 빼요. 카드값 자동이체(현대카드 · 신한카드 …)는 카드 내역과 겹치니 「합계에서 빼기」로 넣어요.</p>
     <label class="drop" id="drop">
       <span>여기에 파일을 끌어다 놓거나 눌러서 고르기<br><small>파일은 이 브라우저 안에서만 읽어요. 서버에는 읽어 낸 내역만 저장돼요.</small></span>
       <input type="file" id="files" accept=".xls,.xlsx,.csv,.htm,.html" multiple hidden>
@@ -351,7 +352,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="../config.js?v=5b927cf1"></script>
-<script src="parse.js?v=c0eb65e2"></script>
+<script src="parse.js?v=25e826b8"></script>
 <script>
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
@@ -856,8 +857,24 @@
     return true;
   }
 
-  async function readFile(file) {
-    const buf = await file.arrayBuffer();
+  // 비밀번호가 걸린 .xlsx (카카오뱅크 메일 엑셀 등): 이 브라우저 안에서만 풀어서 읽는다. 비밀번호는 저장하지 않음
+  let xpLoad = null;
+  const loadXP = () => xpLoad || (xpLoad = new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/xlsx-populate@1.21.0/browser/xlsx-populate.min.js';
+    s.onload = () => ok(window.XlsxPopulate);
+    s.onerror = () => { xpLoad = null; fail(new Error('비밀번호 풀기 도구를 불러오지 못했어요')); };
+    document.head.append(s);
+  }));
+  async function unlock(buf, password) {
+    const XP = await loadXP();
+    const wb = await XP.fromDataAsync(buf, { password });
+    return wb.outputAsync({ type: 'arraybuffer' });
+  }
+
+  async function readFile(file, password) {
+    let buf = await file.arrayBuffer();
+    if (password) buf = await unlock(buf, password);
     let wb;
     if (looksText(buf)) {
       wb = XLSX.read(decodeText(buf), { type: 'string', raw: false });
@@ -894,6 +911,9 @@
     store.set(`budget-map:${job.card}`, s);
   }
 
+  // 카드값 자동이체는 「카드대금」, 나머지는 규칙으로
+  const rowCategory = (r) => (r.excluded ? '카드대금' : P.categorize(r.merchant, rules));
+
   function runJob(job, keepMap) {
     const sh = job.sheets[job.sheet];
     const opts = { fileName: job.file.name, text: sh.text };
@@ -905,35 +925,56 @@
       const saved = savedMap(res.card, res.headers);
       if (saved) res = P.parseSheet(sh.raw, { ...opts, card: res.card, headerRow: res.headerRow, map: saved });
     }
-    Object.assign(job, { headerRow: res.headerRow, headers: res.headers, map: res.map, card: res.card || job.card || '', rows: res.rows, skipped: res.skipped });
+    Object.assign(job, { headerRow: res.headerRow, headers: res.headers, map: res.map, card: res.card || job.card || '', rows: res.rows, skipped: res.skipped, skippedIn: res.skippedIn });
   }
 
   async function addFiles(files) {
     $('#imp-err').textContent = '';
     for (const file of files) {
       const job = { file, sheets: [], sheet: 0, card: '', headerRow: null, map: {}, rows: [], result: '' };
-      try {
-        job.sheets = await readFile(file);
-        // 칸 이름 줄을 찾을 수 있는 첫 시트
-        const idx = job.sheets.findIndex((s) => P.findHeader(s.raw) >= 0);
-        job.sheet = idx >= 0 ? idx : 0;
-        runJob(job);
-      } catch (e) {
-        job.error = /password|encrypt/i.test(e.message || '')
-          ? '비밀번호가 걸린 파일이에요. 엑셀에서 열어 비밀번호 없이 다른 이름으로 저장한 뒤 올려 주세요.'
-          : `읽지 못했어요: ${e.message}`;
-      }
+      await openJob(job);
       jobs.push(job);
     }
     renderJobs();
   }
 
+  async function openJob(job, password) {
+    job.error = '';
+    try {
+      job.sheets = await readFile(job.file, password);
+      job.needPw = false;
+      // 칸 이름 줄을 찾을 수 있는 첫 시트
+      const idx = job.sheets.findIndex((s) => P.findHeader(s.raw) >= 0);
+      job.sheet = idx >= 0 ? idx : 0;
+      runJob(job);
+    } catch (e) {
+      const msg = e.message || String(e);
+      if (/password|encrypt/i.test(msg) && !password) {
+        job.needPw = true;
+      } else if (password && /password|decrypt|encrypt|hmac|integrity|corrupt|zip/i.test(msg)) {
+        job.needPw = true;
+        job.pwErr = '비밀번호가 맞지 않아요.';
+      } else {
+        job.error = /password|encrypt/i.test(msg)
+          ? '비밀번호가 걸린 옛 엑셀(.xls)이라 여기서 못 풀어요. 엑셀에서 열어 비밀번호 없이 다른 이름으로 저장한 뒤 올려 주세요.'
+          : `읽지 못했어요: ${msg}`;
+      }
+    }
+  }
+
+  const BANK_ONLY = ['direction', 'kind', 'balance'];
+  const BANK_HIDE = ['installment', 'approval', 'cardno', 'cancel', 'overseas', 'currency'];
   const span = (rows) => { const ds = rows.map((r) => r.date).sort(); return `${ds[0]} ~ ${ds[ds.length - 1]}`; };
 
   function renderJobs() {
-    const cardOpts = (sel) => `<option value="">카드사 고르기</option>` + ['hyundai', 'shinhan', 'samsung', 'other'].map((k) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${CARD_NAME[k]}</option>`).join('');
+    const cardOpts = (sel) => `<option value="">카드사 고르기</option>` + ['hyundai', 'shinhan', 'samsung', 'kakaobank', 'other'].map((k) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${CARD_NAME[k]}</option>`).join('');
     $('#jobs').innerHTML = jobs.map((j, ji) => {
       if (j.error) return `<div class="job px" data-job="${ji}"><div class="job-head"><b>${esc(j.file.name)}</b><button class="btn sm px" type="button" data-rm>빼기</button></div><p class="err">${esc(j.error)}</p></div>`;
+      if (j.needPw) return `<div class="job px" data-job="${ji}">
+        <div class="job-head"><b>${esc(j.file.name)}</b><span style="flex:1"></span><button class="btn sm px" type="button" data-rm>빼기</button></div>
+        <p class="help">비밀번호가 걸린 파일이에요. 파일을 받은 메일에 적힌 비밀번호를 넣어 주세요 (카카오뱅크는 보통 생년월일 6자리). 비밀번호는 이 브라우저 안에서 파일을 여는 데만 쓰고 저장하지 않아요.</p>
+        <form class="inline" data-pwform><input type="password" data-pw autocomplete="off" placeholder="파일 비밀번호" aria-label="파일 비밀번호" style="height:30px;padding:0 8px;font:inherit;font-size:12px;border:0;box-shadow:0 0 0 2px var(--ink)"><button class="btn primary px" type="submit">열기</button><span class="err" style="margin:0">${esc(j.pwErr || '')}</span></form>
+      </div>`;
       const colOpts = (cur) => `<option value="">(없음)</option>` + j.headers.map((h, i) => `<option value="${i}" ${cur === i ? 'selected' : ''}>${esc(h || `${i + 1}번째 칸`)}</option>`).join('');
       const found = j.headerRow >= 0;
       const preview = j.rows.slice(0, 6);
@@ -948,10 +989,10 @@
         </div>
         ${found ? `
           <p class="help">자동으로 짝지은 칸이에요. 틀렸으면 고쳐 주세요 (카드사별로 기억해요).</p>
-          <div class="maps">${P.FIELDS.map((f) => `<label class="field"><span>${f.label}${f.need ? ' *' : ''}</span><select data-map="${f.key}">${colOpts(j.map[f.key])}</select></label>`).join('')}</div>
-          <p class="help">읽은 내역 <b>${j.rows.length}건</b>${j.skipped ? ` · 날짜나 금액이 없어서 뺀 줄 ${j.skipped}개 (합계 줄 등)` : ''}${j.rows.length ? ` · ${span(j.rows)}` : ''}</p>
-          ${preview.length ? `<div style="overflow-x:auto"><table><thead><tr><th>이용일</th><th>가맹점</th><th class="num">금액</th><th>할부</th><th>승인번호</th><th>카드</th><th>분류 (자동)</th></tr></thead><tbody>
-            ${preview.map((r) => `<tr><td>${r.date}</td><td>${esc(r.merchant)}${r.is_cancel ? ' <span class="tag warn">취소</span>' : ''}${r.is_overseas ? ' <span class="tag">해외</span>' : ''}</td><td class="num">${won(r.amount)}</td><td>${r.installment ? r.installment + '개월' : '일시불'}</td><td>${esc(r.approval_no || '')}</td><td>${esc(r.card_last4 || '')}</td><td>${esc(P.categorize(r.merchant, rules) || '-')}</td></tr>`).join('')}
+          <div class="maps">${P.FIELDS.filter((f) => P.BANKS[j.card] ? !BANK_HIDE.includes(f.key) : !BANK_ONLY.includes(f.key)).map((f) => `<label class="field"><span>${f.label}${f.need ? ' *' : ''}</span><select data-map="${f.key}">${colOpts(j.map[f.key])}</select></label>`).join('')}</div>
+          <p class="help">읽은 내역 <b>${j.rows.length}건</b>${j.skippedIn ? ` · 입금 ${j.skippedIn}건은 건너뜀` : ''}${j.rows.some((r) => r.excluded) ? ` · 카드값 ${j.rows.filter((r) => r.excluded).length}건은 합계에서 빼기` : ''}${j.skipped ? ` · 날짜나 금액이 없어서 뺀 줄 ${j.skipped}개 (합계 줄 등)` : ''}${j.rows.length ? ` · ${span(j.rows)}` : ''}</p>
+          ${preview.length ? `<div style="overflow-x:auto"><table><thead><tr><th>이용일</th><th>가맹점</th><th class="num">금액</th><th>${P.BANKS[j.card] ? '거래구분' : '할부'}</th><th>${P.BANKS[j.card] ? '메모' : '승인번호'}</th><th>${P.BANKS[j.card] ? '' : '카드'}</th><th>분류 (자동)</th></tr></thead><tbody>
+            ${preview.map((r) => `<tr><td>${r.date}</td><td>${esc(r.merchant)}${r.is_cancel ? ' <span class="tag warn">취소</span>' : ''}${r.is_overseas ? ' <span class="tag">해외</span>' : ''}${r.excluded ? ' <span class="tag none">합계 제외</span>' : ''}</td><td class="num">${won(r.amount)}</td><td>${P.BANKS[j.card] ? esc(r.kind) : r.installment ? r.installment + '개월' : '일시불'}</td><td>${esc(P.BANKS[j.card] ? r.memo : r.approval_no || '')}</td><td>${esc(r.card_last4 || '')}</td><td>${esc(rowCategory(r) || '-')}</td></tr>`).join('')}
           </tbody></table></div>` : ''}
           ${!j.card ? '<p class="err">카드사를 골라 주세요.</p>' : ''}`
         : '<p class="err">이용일 · 가맹점 · 금액 칸을 찾지 못했어요. 위의 「칸 이름 줄」 에 칸 이름이 있는 줄 번호(엑셀 왼쪽 숫자)를 넣어 보세요.</p>'}
@@ -981,6 +1022,18 @@
     j.done = false; j.result = '';
     renderJobs();
   });
+  $('#jobs').addEventListener('submit', async (e) => {
+    const f = e.target.closest('[data-pwform]');
+    if (!f) return;
+    e.preventDefault();
+    const j = jobs[Number(f.closest('[data-job]').dataset.job)];
+    const pw = f.querySelector('[data-pw]').value;
+    if (!pw) return;
+    f.querySelector('button').disabled = true;
+    j.pwErr = '';
+    await openJob(j, pw);
+    renderJobs();
+  });
   $('#jobs').addEventListener('click', (e) => {
     if (!e.target.closest('[data-rm]')) return;
     jobs.splice(Number(e.target.closest('[data-job]').dataset.job), 1);
@@ -993,14 +1046,14 @@
     for (const j of jobs) {
       if (j.error || j.done || !j.rows.length || !j.card) continue;
       saveMap(j);
-      const rows = j.rows.map((r) => ({
+      const rows = j.rows.map(({ kind, ...r }) => ({
         ...r,
         card: j.card,
         dedup_key: `${j.card}|${r.dedup_key.split('|').slice(1).join('|')}`, // 카드사를 나중에 골랐어도 같은 지문
         user_id: user.id,
         source: 'excel',
-        category: P.categorize(r.merchant, rules),
-        category_auto: true,
+        category: rowCategory(r),
+        category_auto: !r.excluded,
       }));
       let added = 0;
       try {

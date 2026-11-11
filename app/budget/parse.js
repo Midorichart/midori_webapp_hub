@@ -1,4 +1,4 @@
-// 가계부: 카드사 이용내역 엑셀(표 한 장)을 읽어서 가계부 줄로 바꾸는 부분.
+// 가계부: 카드사 이용내역 · 은행 거래내역 엑셀(표 한 장)을 읽어서 가계부 줄로 바꾸는 부분.
 // 화면(index.html)과 나중에 만들 PC 프로그램이 같이 쓸 수 있게 따로 둔다.
 // 입력: 표 한 장을 2차원 배열로 (rows[행][칸]). 값은 숫자 · 글자 · 빈칸.
 (function (root) {
@@ -8,8 +8,11 @@
     hyundai: '현대카드',
     shinhan: '신한카드',
     samsung: '삼성카드',
+    kakaobank: '카카오뱅크',
     manual: '직접 입력',
   };
+  // 카드가 아니라 은행 계좌 거래내역인 곳: 출금만 지출로 넣고, 입금은 (취소 · 환불 말고는) 건너뛴다
+  var BANKS = { kakaobank: true };
 
   // 칸 이름 → 어떤 항목인지. 앞에 있는 패턴일수록 더 확실함. skip 에 걸리면 그 항목이 아님
   var FIELDS = [
@@ -22,8 +25,13 @@
     { key: 'merchant', label: '가맹점명', need: true,
       pats: [/^(이용)?가맹점(명)?$/, /가맹점|이용처|사용처|이용하신곳|상호/, /내용|적요/],
       skip: /번호|주소|업종|전화|사업자|국가|도시/ },
+    { key: 'direction', label: '입금/출금 (은행)',
+      pats: [/^(입출금|입지)?구분$|^입출금$|입금\/?출금/] },
+    { key: 'kind', label: '거래구분 (은행)', pats: [/^거래(구분|종류|유형)$/] },
+    { key: 'balance', label: '거래 후 잔액 (은행)', pats: [/거래후잔액|^잔액$|^잔고$/] },
+    { key: 'memo', label: '메모', pats: [/^메모$|^비고$/] },
     { key: 'installment', label: '할부개월',
-      pats: [/^할부(개월|기간|개월수)?$/, /할부/, /이용구분|결제방법|결제구분|거래구분|매출구분/],
+      pats: [/^할부(개월|기간|개월수)?$/, /할부/, /이용구분|결제방법|결제구분|매출구분/],
       skip: /잔액|이자|수수료|금액|원금|남은/ },
     { key: 'approval', label: '승인번호', pats: [/승인번호/] },
     { key: 'cardno', label: '카드(끝자리)',
@@ -84,6 +92,7 @@
     var text = String(fileName || '');
     for (var r = 0; r < Math.max(0, Math.min(headerRow, 15)); r++) text += ' ' + (rows[r] || []).join(' ');
     text = text.toLowerCase();
+    if (/카카오뱅크|kakaobank|kakao_bank/.test(text)) return 'kakaobank';
     if (/현대카드|hyundai|현대/.test(text)) return 'hyundai';
     if (/신한카드|shinhan|신한/.test(text)) return 'shinhan';
     if (/삼성카드|samsung|삼성/.test(text)) return 'samsung';
@@ -150,23 +159,30 @@
     return m ? m[1] : null;
   }
 
+  // 카드값 자동이체: 「현대카드」 「신한카드」 「삼성카드」 「KB국민카드」 「카드대금」 등
+  var CARD_BILL = /카드대금|(현대|신한|삼성|국민|kb|롯데|하나|우리|비씨|bc|nh|농협|씨티)카드/i;
+
   function cleanText(v) {
     return String(v == null ? '' : v).replace(/\s+/g, ' ').trim();
   }
 
   // 표 한 장 → 가계부 줄. map 을 안 주면 자동으로 짝 지음
-  // 돌려주는 것: { headerRow, headers, map, card, rows: [...], skipped }
+  // 돌려주는 것: { headerRow, headers, map, card, rows: [...], skipped, skippedIn }
+  //   은행(카카오뱅크): 출금 = 지출(+), 입금은 건너뜀(skippedIn). 단 입금 중 취소 · 환불은 지출 취소(-)로 넣음.
+  //   카드값 자동이체(현대카드 · 신한카드 …)는 카드 내역과 겹치므로 excluded(합계에서 빼기)로 넣음.
   function parseSheet(rows, opts) {
     opts = opts || {};
     var headerRow = opts.headerRow != null ? opts.headerRow : findHeader(rows);
-    if (headerRow < 0) return { headerRow: -1, headers: [], map: {}, card: '', rows: [], skipped: 0 };
+    if (headerRow < 0) return { headerRow: -1, headers: [], map: {}, card: '', rows: [], skipped: 0, skippedIn: 0 };
     var headers = (rows[headerRow] || []).map(cleanText);
     var map = opts.map || autoMap(headers);
     var card = opts.card || detectCard(opts.fileName, rows, headerRow) || '';
     var text = opts.text || rows; // 화면에 보이는 글자 그대로의 표 (승인번호 앞자리 0 등)
     var out = [];
     var skipped = 0;
+    var skippedIn = 0;
     var seen = {};
+    var bank = !!BANKS[card];
 
     function cell(r, key, useText) {
       if (map[key] == null) return '';
@@ -182,9 +198,29 @@
       var merchant = cleanText(cell(r, 'merchant', true));
       if (!date || isNaN(amount) || /^(합계|소계|총계|총\s*합계|계)$/.test(merchant)) { skipped++; continue; }
 
-      var cancelText = cleanText(cell(r, 'cancel', true));
-      var isCancel = /취소|환불|반품/.test(cancelText) || amount < 0;
-      if (isCancel) amount = -Math.abs(amount);
+      var kindText = cleanText(cell(r, 'kind', true));
+      var memo = cleanText(cell(r, 'memo', true));
+      var excluded = false;
+      var isCancel;
+      if (bank) {
+        var dir = cleanText(cell(r, 'direction', true));
+        var isIn = /입금/.test(dir) || (!/출금/.test(dir) && amount > 0 && map.direction != null) || (map.direction == null && amount > 0);
+        if (isIn) {
+          if (!/취소|환불|반품/.test(kindText + ' ' + merchant)) { skippedIn++; continue; }
+          isCancel = true; // 체크카드 결제 취소 등: 지출을 줄임
+          amount = -Math.abs(amount);
+        } else {
+          isCancel = false;
+          amount = Math.abs(amount);
+        }
+        if (amount === 0) { skipped++; continue; }
+        // 카드값 자동이체는 카드 내역으로 이미 들어오므로 합계에서 뺀다
+        if (CARD_BILL.test(merchant.replace(/\s+/g, ''))) excluded = true;
+      } else {
+        var cancelText = cleanText(cell(r, 'cancel', true));
+        isCancel = /취소|환불|반품/.test(cancelText) || amount < 0;
+        if (isCancel) amount = -Math.abs(amount);
+      }
 
       var ovText = cleanText(cell(r, 'overseas', true));
       var cur = cleanText(cell(r, 'currency', true)).toUpperCase();
@@ -193,8 +229,11 @@
       var approval = cleanText(cell(r, 'approval', true)).replace(/\s/g, '') || null;
       var last4 = cardLast(cell(r, 'cardno', true));
 
-      var base = [card || '?', last4 || '', approval || '', date, amount, isCancel ? 1 : 0,
-        approval ? '' : merchant.replace(/\s/g, '')].join('|');
+      var base = bank
+        // 은행: 거래 시각 + 금액 + 거래 후 잔액 + 내용 (잔액이 있으면 거의 한 줄에 하나)
+        ? [card, '', '', cleanText(cell(r, 'date', true)) || date, amount, cleanText(cell(r, 'balance', true)), merchant.replace(/\s/g, '')].join('|')
+        : [card || '?', last4 || '', approval || '', date, amount, isCancel ? 1 : 0,
+          approval ? '' : merchant.replace(/\s/g, '')].join('|');
       seen[base] = (seen[base] || 0) + 1;
 
       out.push({
@@ -203,15 +242,18 @@
         card_last4: last4,
         merchant: merchant,
         amount: amount,
-        installment: parseInstallment(cell(r, 'installment', true)),
+        installment: bank ? 0 : parseInstallment(cell(r, 'installment', true) || (map.installment == null ? kindText : '')),
         approval_no: approval,
         is_cancel: isCancel,
         is_overseas: isOverseas,
+        excluded: excluded,
+        memo: memo,
+        kind: kindText, // 화면 미리보기용 (저장 안 함)
         // 같은 파일 안에서 똑같은 줄이 여러 개면(같은 날 같은 가게 같은 금액) 몇 번째인지 붙여서 구분
         dedup_key: base + '#' + seen[base],
       });
     }
-    return { headerRow: headerRow, headers: headers, map: map, card: card, rows: out, skipped: skipped };
+    return { headerRow: headerRow, headers: headers, map: map, card: card, rows: out, skipped: skipped, skippedIn: skippedIn };
   }
 
   // 분류 규칙: 가맹점명에 keyword 가 들어 있으면(띄어쓰기 · 대소문자 무시) 그 분류. 여러 개 맞으면 긴 keyword 우선
@@ -241,6 +283,7 @@
 
   root.BudgetParse = {
     CARDS: CARDS,
+    BANKS: BANKS,
     FIELDS: FIELDS,
     DEFAULT_RULES: DEFAULT_RULES,
     autoMap: autoMap,
