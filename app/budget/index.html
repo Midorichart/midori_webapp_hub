@@ -97,6 +97,23 @@
   .tag.inst { background: var(--accent); color: var(--accent-ink); }
   .tag.ok { background: var(--ok); color: #fff; }
   .empty { padding: 20px 0; text-align: center; color: var(--mute); font-size: 13px; }
+  .red { color: var(--down); }
+  tr.total.red td { color: var(--down); }
+  .more { display: block; width: calc(100% - 2 * var(--px)); margin-top: 6px; }
+
+  /* 할부 게이지: 개월 수만큼 칸, 낸 회차는 청록, 이 달은 진하게 */
+  .gauge { display: flex; gap: 2px; width: 100%; max-width: 220px; height: 9px; margin-top: 3px; }
+  .gauge i { flex: 1; min-width: 2px; background: #fff; box-shadow: inset 0 0 0 1px var(--mute); }
+  .gauge i.on { background: var(--accent); box-shadow: none; }
+  .gauge i.now { background: var(--ink); box-shadow: none; }
+  td .gauge { margin-left: auto; width: 96px; }
+
+  /* 지출 · 저축 */
+  .box { padding: 10px 14px; background: var(--paper); }
+  .btn.done { background: var(--ok); color: #fff; }
+  .save-total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin: 0 0 6px; }
+  .save-total b { font-weight: 400; font-size: 22px; }
+  .need-sql { margin: 0; color: var(--down); font-size: 12px; }
 
   .income { padding: 10px 14px; background: var(--paper); }
   .inline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
@@ -185,8 +202,8 @@
     <section data-panel="month">
       <div class="cards">
         <div class="stat px"><span>수입</span><b id="s-income"></b><small id="s-income-n"></small></div>
-        <div class="stat px"><span>카드 결제예정</span><b id="s-due"></b><small id="s-due-sub"></small></div>
-        <div class="stat px left"><span>남는 돈</span><b id="s-left"></b><small id="s-unpaid"></small></div>
+        <div class="stat px"><span>나가는 돈</span><b id="s-due"></b><small id="s-due-sub"></small></div>
+        <div class="stat px left"><span>남는 돈 <small>(수입 − 카드 − 지출 − 저축)</small></span><b id="s-left"></b><small id="s-unpaid"></small></div>
       </div>
 
       <h2 class="label"><span>카드별 결제예정</span><span>결제하면 「결제 전」을 눌러 체크</span></h2>
@@ -196,6 +213,38 @@
       </table></div>
 
       <div id="due-detail" style="margin-top:18px"></div>
+
+      <h2 class="label"><span>이 달 지출 <small>(카드 말고: 월세 · 이체 · 현금 …)</small></span><span id="ex-sum"></span></h2>
+      <div class="box px">
+        <p class="need-sql" id="ex-sql" hidden>지출을 저장할 표가 아직 없어요. app/budget/supabase/budget.sql 을 SQL Editor 에서 실행해 주세요.</p>
+        <table id="ex-table">
+          <thead><tr><th>날짜</th><th>항목</th><th class="num">금액</th><th class="num">상태</th></tr></thead>
+          <tbody id="ex-rows"></tbody>
+        </table>
+        <form class="inline" id="ex-form">
+          <input id="ex-date" type="date" required aria-label="지출 날짜">
+          <input id="ex-label" placeholder="항목 (예: 월세)" maxlength="60" aria-label="지출 항목">
+          <input id="ex-amount" placeholder="금액" maxlength="60" required autocomplete="off" aria-label="지출 금액" style="width:9em">
+          <small class="mute" id="ex-calc"></small>
+          <button class="btn primary px" type="submit" id="ex-save">지출 추가</button>
+          <button class="btn danger px" type="button" id="ex-del" hidden>삭제</button>
+          <button class="btn px" type="button" id="ex-cancel" hidden>취소</button>
+        </form>
+        <p class="err" id="ex-err" style="margin:6px 0 0"></p>
+      </div>
+
+      <h2 class="label"><span>저축</span><span id="sv-month"></span></h2>
+      <div class="box px">
+        <p class="need-sql" id="sv-sql" hidden>저축을 저장할 표가 아직 없어요. app/budget/supabase/budget.sql 을 SQL Editor 에서 실행해 주세요.</p>
+        <div class="save-total"><span class="mute" id="sv-total-label">이 달까지 모은 돈</span><b id="sv-total"></b><small class="mute" id="sv-note"></small></div>
+        <form class="inline" id="sv-form">
+          <span id="sv-label">이 달 저축</span>
+          <input id="sv-amount" placeholder="금액 (빼 쓴 달은 -50000)" maxlength="60" autocomplete="off" aria-label="이 달 저축 금액" style="width:14em">
+          <small class="mute" id="sv-calc"></small>
+          <button class="btn primary px" type="submit">저장</button>
+        </form>
+        <p class="err" id="sv-err" style="margin:6px 0 0"></p>
+      </div>
 
       <h2 class="label"><span>이 달 수입</span><span id="inc-sum"></span></h2>
       <div class="income px">
@@ -214,7 +263,7 @@
 
       <h2 class="label"><span>12개월 한눈에</span><span>누르면 그 달로</span></h2>
       <div class="tbl px"><table>
-        <thead><tr><th>결제 달</th><th class="num">수입</th><th class="num hide-sm">일시불</th><th class="num hide-sm">할부</th><th class="num">결제예정</th><th class="num">남는 돈</th><th class="num">결제</th></tr></thead>
+        <thead><tr><th>달</th><th class="num">수입</th><th class="num">카드</th><th class="num hide-sm">지출</th><th class="num hide-sm">저축</th><th class="num">남는 돈</th><th class="num">모은 돈</th><th class="num hide-sm">카드 결제</th></tr></thead>
         <tbody id="year-rows"></tbody>
       </table></div>
     </section>
@@ -353,6 +402,11 @@
   let purchases = [];
   let paid = new Set();      // 'YYYY-MM|card'
   let income = [];
+  let expenses = [];
+  let savings = new Map();   // 'YYYY-MM' → 금액
+  let hasEx = true;
+  let hasSv = true;
+  const expanded = new Set(); // 「더 보기」 를 펼친 카드
   const cutoff = { hyundai: 31, samsung: 31, shinhan: 31 }; // 이용기간 마지막 날 (31 = 말일)
   const payDay = { hyundai: 14, samsung: 14, shinhan: 14 }; // 결제일
   let tab = 'month';
@@ -417,6 +471,16 @@
   const incomeOf = (m) => income.filter((r) => ym(r.month) === m);
   const incomeSum = (m) => incomeOf(m).reduce((s, r) => s + r.amount, 0);
   const signed = (n) => `${n < 0 ? '−' : ''}${won(Math.abs(n))}`;
+  const expensesOf = (m) => expenses.filter((e) => ym(e.date) === m).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const expenseSum = (m) => expensesOf(m).reduce((t, e) => t + e.amount, 0);
+  const savingOf = (m) => savings.get(m) || 0;
+  const amountText = (n) => `${n < 0 ? '-' : ''}${Math.abs(n).toLocaleString('ko-KR')}`;
+  const savedUpTo = (m) => [...savings].reduce((t, [k, v]) => (k <= m ? t + v : t), 0);
+
+  // 할부 게이지: 개월 수만큼 칸. done 칸까지 청록(낸 것), now 번째 칸은 진하게(이 달)
+  function gauge(n, done, now) {
+    return `<span class="gauge" role="img" aria-label="${n}회 중 ${now || done}회">${Array.from({ length: n }, (_, i) => `<i class="${i + 1 === now ? 'now' : i < done ? 'on' : ''}"></i>`).join('')}</span>`;
+  }
 
   // ── 불러오기 ──────────────────────────────────
   async function fetchAll(table, cols, orderCol) {
@@ -434,15 +498,23 @@
   async function load() {
     $('#err').textContent = '';
     try {
-      const [ps, pd, inc, cs] = await Promise.all([
+      // 지출 · 저축 표는 나중에 생겼으므로, 없어도 나머지는 그대로 쓰게 한다
+      const optional = (p) => p.catch((e) => (missingTable(e) ? null : Promise.reject(e)));
+      const [ps, pd, inc, cs, ex, sv] = await Promise.all([
         fetchAll('budget_purchases', '*', 'date'),
         fetchAll('budget_paid', 'month, card', 'month'),
         fetchAll('budget_income', '*', 'month'),
         fetchAll('budget_cards', '*', 'card'),
+        optional(fetchAll('budget_expenses', '*', 'date')),
+        optional(fetchAll('budget_savings', '*', 'month')),
       ]);
       purchases = ps.map(fix);
       paid = new Set(pd.map((r) => `${ym(r.month)}|${r.card}`));
       income = inc.map(fix);
+      hasEx = ex !== null;
+      hasSv = sv !== null;
+      expenses = (ex || []).map(fix);
+      savings = new Map((sv || []).map((r) => [ym(r.month), Number(r.amount)]));
       cs.forEach((r) => { cutoff[r.card] = r.cutoff_day; if (r.pay_day) payDay[r.card] = r.pay_day; });
     } catch (e) {
       if (missingTable(e)) { $('#setup').hidden = false; $('#main').hidden = true; return; }
@@ -474,22 +546,28 @@
     return `<li class="item" data-id="${p.id}" tabindex="0">
       <span><b>${esc(p.merchant || '(내용 없음)')}</b> ${kind}</span>
       <span class="amt">${won(it.amount)}</span>
-      <span class="sub">${sub}</span>
+      <span class="sub">${sub}${p.months > 1 ? gauge(p.months, it.no - 1, it.no) : ''}</span>
     </li>`;
   }
 
   function renderMonth() {
     const s = monthSums(month);
     const inc = incomeSum(month);
-    const unpaid = CARDS.filter((c) => !paid.has(`${month}|${c}`)).reduce((t, c) => t + s.cards[c].total, 0);
+    const ex = expenseSum(month);
+    const sv = savingOf(month);
+    const out = s.total + ex + sv;
+    const unpaidCard = CARDS.filter((c) => !paid.has(`${month}|${c}`)).reduce((t, c) => t + s.cards[c].total, 0);
+    const undoneEx = expensesOf(month).filter((e) => !e.done).reduce((t, e) => t + e.amount, 0);
     $('#s-income').textContent = won(inc);
     $('#s-income-n').textContent = incomeOf(month).length ? `${incomeOf(month).length}개 항목` : '아래에서 적어 주세요';
-    $('#s-due').textContent = won(s.total);
-    $('#s-due-sub').textContent = `일시불 ${won(s.lump)} · 할부 ${won(s.inst)}`;
-    const left = inc - s.total;
+    $('#s-due').textContent = won(out);
+    $('#s-due-sub').textContent = `카드 ${won(s.total)} · 지출 ${won(ex)} · 저축 ${signed(sv)}`;
+    const left = inc - out;
     $('#s-left').textContent = signed(left);
     $('#s-left').classList.toggle('minus', left < 0);
-    $('#s-unpaid').textContent = s.total ? (unpaid ? `아직 안 낸 카드값 ${won(unpaid)}` : '이 달 카드값 모두 결제함 ✔') : '';
+    $('#s-unpaid').textContent = unpaidCard + undoneEx
+      ? `아직 안 나간 돈 ${won(unpaidCard + undoneEx)} (카드 ${won(unpaidCard)} · 지출 ${won(undoneEx)})`
+      : s.total + ex ? '이 달 카드값 · 지출 모두 나갔어요 ✔' : '';
 
     $('#due-rows').innerHTML = CARDS.map((c) => {
       const x = s.cards[c];
@@ -498,19 +576,28 @@
         <td>${CARD_NAME[c]} <small class="mute">${payDay[c]}일</small></td>
         <td class="num">${won(x.lump)}</td>
         <td class="num">${won(x.inst)}</td>
-        <td class="num">${won(x.total)}</td>
+        <td class="num red">${won(x.total)}</td>
         <td class="num">${x.total || isPaid ? `<button class="btn sm px ${isPaid ? 'paid' : ''}" type="button" data-paid="${c}">${isPaid ? '✔ 결제함' : '결제 전'}</button>` : '<span class="mute">-</span>'}</td>
       </tr>`;
-    }).join('') + `<tr class="total"><td>합계</td><td class="num">${won(s.lump)}</td><td class="num">${won(s.inst)}</td><td class="num">${won(s.total)}</td><td></td></tr>`;
+    }).join('') + `<tr class="total red"><td>합계</td><td class="num">${won(s.lump)}</td><td class="num">${won(s.inst)}</td><td class="num">${won(s.total)}</td><td></td></tr>`;
 
+    // 카드별 내역: 5개가 넘으면 접어 두고 「더 보기」
+    const FOLD = 5;
     $('#due-detail').innerHTML = CARDS.filter((c) => s.cards[c].items.length).map((c) => {
       const x = s.cards[c];
       x.items.sort((a, b) => (a.p.months > 1) - (b.p.months > 1) || (a.p.date < b.p.date ? -1 : 1));
+      const open = expanded.has(c);
+      const shown = open ? x.items : x.items.slice(0, FOLD);
+      const rest = x.items.length - FOLD;
       return `<div class="cardbox px">
-        <h3>${CARD_NAME[c]} ${paid.has(`${month}|${c}`) ? '<span class="tag ok">결제함</span>' : ''}<span class="sum">${won(x.total)}</span></h3>
-        <ul class="items">${x.items.map(itemLine).join('')}</ul>
+        <h3>${CARD_NAME[c]} <span class="mute" style="font-size:12px">${x.items.length}건</span> ${paid.has(`${month}|${c}`) ? '<span class="tag ok">결제함</span>' : ''}<span class="sum red">${won(x.total)}</span></h3>
+        <ul class="items">${shown.map(itemLine).join('')}</ul>
+        ${rest > 0 ? `<button class="btn sm px more" type="button" data-more="${c}">${open ? '접기 ▲' : `나머지 ${rest}개 더 보기 ▼`}</button>` : ''}
       </div>`;
     }).join('') || `<p class="empty">${monthText(month)}에 결제할 카드값이 없어요.</p>`;
+
+    renderExpenses();
+    renderSavings();
 
     // 수입
     const rows = incomeOf(month);
@@ -526,20 +613,60 @@
     $('#year-rows').innerHTML = ms.map((m) => {
       const x = monthSums(m);
       const i = incomeSum(m);
+      const e = expenseSum(m);
+      const v = savingOf(m);
       const due = CARDS.filter((c) => x.cards[c].total > 0);
       const done = due.filter((c) => paid.has(`${m}|${c}`)).length;
-      const l = i - x.total;
+      const l = i - x.total - e - v;
+      const dash = '<span class="mute">-</span>';
       return `<tr class="click ${m === month ? 'on' : ''}" data-m="${m}">
         <td>${shortMonth(m)}${m === thisMonth ? ' <span class="mute">(이번 달)</span>' : ''}</td>
-        <td class="num">${i ? won(i) : '<span class="mute">-</span>'}</td>
-        <td class="num hide-sm">${won(x.lump)}</td>
-        <td class="num hide-sm">${won(x.inst)}</td>
+        <td class="num">${i ? won(i) : dash}</td>
         <td class="num">${won(x.total)}</td>
-        <td class="num ${l < 0 ? 'minus' : ''}">${i || x.total ? signed(l) : '<span class="mute">-</span>'}</td>
-        <td class="num">${due.length ? (done === due.length ? '<span class="tag ok">완료</span>' : `${done}/${due.length}`) : '<span class="mute">-</span>'}</td>
+        <td class="num hide-sm">${e ? won(e) : dash}</td>
+        <td class="num hide-sm">${v ? signed(v) : dash}</td>
+        <td class="num ${l < 0 ? 'minus' : ''}">${i || x.total || e || v ? signed(l) : dash}</td>
+        <td class="num">${savedUpTo(m) ? signed(savedUpTo(m)) : dash}</td>
+        <td class="num hide-sm">${due.length ? (done === due.length ? '<span class="tag ok">완료</span>' : `${done}/${due.length}`) : dash}</td>
       </tr>`;
     }).join('');
   }
+
+  // ── 지출 목록 ─────────────────────────────────
+  function renderExpenses() {
+    $('#ex-sql').hidden = hasEx;
+    $('#ex-form').hidden = !hasEx;
+    const rows = expensesOf(month);
+    const done = rows.filter((e) => e.done).reduce((t, e) => t + e.amount, 0);
+    const total = rows.reduce((t, e) => t + e.amount, 0);
+    $('#ex-sum').textContent = rows.length ? `${won(total)} (완료 ${won(done)} · 예정 ${won(total - done)})` : '';
+    $('#ex-table').hidden = !rows.length;
+    $('#ex-rows').innerHTML = rows.map((e) => `
+      <tr class="click ${exEditing === e ? 'on' : ''}" data-ex="${e.id}">
+        <td>${dateText(e.date)}</td>
+        <td>${esc(e.label || '(항목 없음)')}</td>
+        <td class="num">${won(e.amount)}</td>
+        <td class="num"><button class="btn sm px ${e.done ? 'done' : ''}" type="button" data-ex-done="${e.id}">${e.done ? '✔ 지출 완료' : '지출 예정'}</button></td>
+      </tr>`).join('');
+    if (!exEditing && !$('#ex-date').value) $('#ex-date').value = month === thisMonth ? todayStr : `${month}-01`;
+  }
+
+  // ── 저축 ─────────────────────────────────────
+  function renderSavings() {
+    $('#sv-sql').hidden = hasSv;
+    $('#sv-form').hidden = !hasSv;
+    const future = month > thisMonth;
+    const mo = Number(month.slice(5));
+    $('#sv-label').textContent = future ? `${mo}월 저축 예정` : `${mo}월 저축`;
+    $('#sv-amount').value = savings.has(month) ? amountText(savingOf(month)) : '';
+    $('#sv-calc').textContent = '';
+    $('#sv-total-label').textContent = `${monthText(month)}까지 모은 돈`;
+    $('#sv-total').textContent = signed(savedUpTo(month));
+    const planned = [...savings].filter(([k]) => k > thisMonth && k <= month).reduce((t, [, v]) => t + v, 0);
+    $('#sv-note').textContent = future && planned ? `(앞으로 할 저축 ${signed(planned)} 포함)` : '';
+    $('#sv-month').textContent = sv0(month);
+  }
+  const sv0 = (m) => (savings.has(m) ? `이 달 ${m > thisMonth ? '예정 ' : ''}${signed(savingOf(m))}` : '');
 
   function renderInst() {
     const list = purchases.filter((p) => p.months > 1).map((p) => {
@@ -566,11 +693,11 @@
     $('#i-empty').hidden = shown.length > 0;
     $('#i-rows').innerHTML = shown.map(({ p, sch, cur, remain, last, started }) => `
       <tr class="click" data-id="${p.id}">
-        <td>${CARD_NAME[p.card]}</td>
+        <td style="white-space:nowrap">${CARD_NAME[p.card].replace('카드', '')}</td>
         <td>${esc(p.merchant || '(내용 없음)')}<br><small class="mute">${dateText(p.date)}${p.memo ? ` · ${esc(p.memo)}` : ''}</small></td>
         <td class="num">${won(p.amount)}<br><small class="mute">${p.months}개월</small></td>
         <td class="num">${won(sch[sch.length - 1].amount)}</td>
-        <td class="num">${cur ? `${cur.no}/${p.months}회` : started ? '끝' : `${shortMonth(sch[0].month)}부터`}</td>
+        <td class="num">${cur ? `${cur.no}/${p.months}회` : started ? '끝' : `${shortMonth(sch[0].month)}부터`}${gauge(p.months, cur ? cur.no - 1 : started ? p.months : 0, cur ? cur.no : 0)}</td>
         <td class="num hide-sm">${won(remain)}</td>
         <td class="num hide-sm">${shortMonth(last)}</td>
       </tr>`).join('');
@@ -632,6 +759,93 @@
     paid.has(key) ? paid.delete(key) : paid.add(key);
     render();
   });
+
+  // ── 카드 내역 더 보기 · 접기 ─────────────────
+  $('#due-detail').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-more]');
+    if (!b) return;
+    e.stopPropagation();
+    const c = b.dataset.more;
+    expanded.has(c) ? expanded.delete(c) : expanded.add(c);
+    render();
+  }, true);
+
+  // ── 지출 ─────────────────────────────────────
+  let exEditing = null;
+  function exReset() {
+    exEditing = null;
+    $('#ex-date').value = month === thisMonth ? todayStr : `${month}-01`;
+    $('#ex-label').value = '';
+    $('#ex-amount').value = '';
+    $('#ex-calc').textContent = '';
+    $('#ex-err').textContent = '';
+    $('#ex-save').textContent = '지출 추가';
+    $('#ex-del').hidden = $('#ex-cancel').hidden = true;
+  }
+  $('#ex-form').onsubmit = async (e) => {
+    e.preventDefault();
+    $('#ex-err').textContent = '';
+    const amount = num($('#ex-amount').value);
+    if (!$('#ex-date').value) return ($('#ex-err').textContent = '날짜를 넣어 주세요.');
+    if (!Number.isFinite(amount) || amount <= 0) return ($('#ex-err').textContent = '금액을 숫자로 넣어 주세요.');
+    const row = { date: $('#ex-date').value, label: $('#ex-label').value.trim(), amount };
+    const { data, error } = exEditing
+      ? await sb.from('budget_expenses').update(row).eq('id', exEditing.id).select().single()
+      : await sb.from('budget_expenses').insert(row).select().single();
+    if (error) return ($('#ex-err').textContent = `저장하지 못했어요: ${error.message}`);
+    if (exEditing) Object.assign(exEditing, fix(data)); else expenses.push(fix(data));
+    const other = ym(row.date) !== month ? ` (${monthText(ym(row.date))} 지출로 들어갔어요)` : '';
+    exReset();
+    render();
+    $('#ex-err').textContent = other ? `저장했어요${other}` : '';
+    $('#ex-label').focus();
+  };
+  $('#ex-cancel').onclick = () => { exReset(); render(); };
+  $('#ex-del').onclick = async () => {
+    if (!exEditing || !confirm(`「${exEditing.label || '지출'} ${won(exEditing.amount)}」 을 지울까요?`)) return;
+    const { error } = await sb.from('budget_expenses').delete().eq('id', exEditing.id);
+    if (error) return ($('#ex-err').textContent = error.message);
+    expenses = expenses.filter((x) => x !== exEditing);
+    exReset();
+    render();
+  };
+  $('#ex-rows').addEventListener('click', async (e) => {
+    const t = e.target.closest('[data-ex-done]');
+    if (t) {
+      const r = expenses.find((x) => x.id === t.dataset.exDone);
+      t.disabled = true;
+      const { error } = await sb.from('budget_expenses').update({ done: !r.done }).eq('id', r.id);
+      if (error) { $('#ex-err').textContent = `저장하지 못했어요: ${error.message}`; t.disabled = false; return; }
+      r.done = !r.done;
+      return render();
+    }
+    const tr = e.target.closest('[data-ex]');
+    if (!tr) return;
+    exEditing = expenses.find((x) => x.id === tr.dataset.ex);
+    $('#ex-date').value = exEditing.date;
+    $('#ex-label').value = exEditing.label;
+    $('#ex-amount').value = exEditing.amount.toLocaleString('ko-KR');
+    $('#ex-save').textContent = '고치기';
+    $('#ex-del').hidden = $('#ex-cancel').hidden = false;
+    render();
+    $('#ex-amount').focus();
+  });
+
+  // ── 저축 ─────────────────────────────────────
+  $('#sv-form').onsubmit = async (e) => {
+    e.preventDefault();
+    $('#sv-err').textContent = '';
+    const raw = $('#sv-amount').value.trim();
+    const amount = raw ? num(raw) : 0;
+    if (!Number.isFinite(amount)) return ($('#sv-err').textContent = '금액을 숫자로 넣어 주세요. (빼 쓴 달은 -50000 처럼)');
+    const { error } = amount === 0
+      ? await sb.from('budget_savings').delete().eq('month', `${month}-01`)
+      : await sb.from('budget_savings').upsert({ month: `${month}-01`, amount }, { onConflict: 'user_id,month' });
+    if (error) return ($('#sv-err').textContent = `저장하지 못했어요: ${error.message}`);
+    if (amount === 0) savings.delete(month); else savings.set(month, amount);
+    render();
+    $('#sv-err').textContent = amount === 0 ? '이 달 저축을 지웠어요.' : '';
+  };
 
   // ── 수입 ─────────────────────────────────────
   let incEditing = null;
@@ -771,14 +985,17 @@
   form.first_month.addEventListener('change', () => { firstTouched = true; preview(); });
   form.amount.addEventListener('input', preview);
   // 칸을 벗어나면 계산 결과로 바꿔 둠 (3000+1500 → 4,500)
-  const settle = (el) => { const n = num(el.value); if (Number.isFinite(n) && n > 0) el.value = n.toLocaleString('ko-KR'); };
+  const settle = (el) => { const n = num(el.value); if (Number.isFinite(n) && n !== 0) el.value = amountText(n); };
   form.amount.addEventListener('blur', () => { settle(form.amount); preview(); });
-  $('#inc-amount').addEventListener('input', () => {
-    const v = $('#inc-amount').value;
-    const n = num(v);
-    $('#inc-calc').textContent = isFormula(v) ? (Number.isFinite(n) ? `= ${won(n)}` : '계산할 수 없어요') : '';
+  // 수입 · 지출 · 저축 금액 칸: 식을 쓰면 옆에 「= 4,500원」
+  [['#inc-amount', '#inc-calc'], ['#ex-amount', '#ex-calc'], ['#sv-amount', '#sv-calc']].forEach(([inp, hint]) => {
+    $(inp).addEventListener('input', () => {
+      const v = $(inp).value;
+      const n = num(v);
+      $(hint).textContent = isFormula(v) ? (Number.isFinite(n) ? `= ${signed(n)}` : '계산할 수 없어요') : '';
+    });
+    $(inp).addEventListener('blur', () => { settle($(inp)); $(hint).textContent = ''; });
   });
-  $('#inc-amount').addEventListener('blur', () => { settle($('#inc-amount')); $('#inc-calc').textContent = ''; });
   form.months.addEventListener('change', preview);
 
   async function save(more) {
@@ -847,7 +1064,7 @@
   $('#open-new').onclick = () => openEdit(null);
 
   // ── 탭 · 달 ──────────────────────────────────
-  const go = (m) => { month = m; incReset(); $('#saved-note').hidden = true; render(); };
+  const go = (m) => { month = m; incReset(); exReset(); $('#sv-err').textContent = ''; $('#saved-note').hidden = true; render(); };
   $('#saved-note').addEventListener('click', (e) => { const b = e.target.closest('[data-goto]'); if (b) go(b.dataset.goto); });
   $$('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; render(); }));
   $('#prev').onclick = () => go(addMonth(month, -1));

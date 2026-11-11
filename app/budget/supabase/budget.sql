@@ -64,6 +64,36 @@ create table if not exists budget_cards (
 );
 alter table budget_cards add column if not exists pay_day int not null default 14 check (pay_day between 1 and 31);
 
+-- 카드 말고 나가는 돈 (월세 · 이체 · 현금 …): 날짜 · 항목 · 금액, 지출 예정 / 지출 완료
+create table if not exists budget_expenses (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  date        date not null,
+  label       text not null default '',
+  amount      bigint not null check (amount > 0),
+  done        boolean not null default false,                   -- true = 지출 완료
+  created_at  timestamptz not null default now()
+);
+create index if not exists budget_expenses_user on budget_expenses (user_id, date);
+
+-- 달마다 저축 (지난 달 = 한 것, 앞으로 = 할 것). 빼 쓴 달은 음수로
+create table if not exists budget_savings (
+  user_id  uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  month    date not null,                                       -- 그 달 1일
+  amount   bigint not null,
+  primary key (user_id, month)
+);
+
+alter table budget_expenses  enable row level security;
+alter table budget_savings   enable row level security;
+drop policy if exists "본인만" on budget_expenses;
+drop policy if exists "본인만" on budget_savings;
+create policy "본인만" on budget_expenses for all to authenticated
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+create policy "본인만" on budget_savings for all to authenticated
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+revoke all on budget_expenses, budget_savings from anon;
+
 alter table budget_purchases enable row level security;
 alter table budget_paid      enable row level security;
 alter table budget_income    enable row level security;
